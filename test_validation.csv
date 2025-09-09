@@ -1,6 +1,0 @@
-email,firstname,lastname,phone,company
-test1@example.com,Test,User,123-456-7890,Test Company
-invalid-email,Bad,Data,,No Company
-good.user@domain.com,Good,User,555-0123,Good Company
-,Empty,Email,999-888-7777,Missing Email Co
-another@test.com,,NoFirst,111-222-3333,Another Company
