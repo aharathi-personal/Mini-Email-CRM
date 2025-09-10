@@ -17,6 +17,9 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 
 from ui.widgets.file_upload import FileUploadWidget
+from ui.styles.stylesheet import (
+    TITLE_STYLE, SUBTITLE_STYLE, BUTTON_STYLE, SUCCESS_BUTTON_STYLE
+)
 
 
 class UploadScreen(QWidget):
@@ -42,17 +45,14 @@ class UploadScreen(QWidget):
         
         # Title
         title = QLabel("Step 1 of 4: Upload Contact List")
-        title_font = QFont()
-        title_font.setPointSize(18)
-        title_font.setBold(True)
-        title.setFont(title_font)
+        title.setStyleSheet(TITLE_STYLE)
         title.setAlignment(Qt.AlignCenter)
         header_layout.addWidget(title)
         
         # Subtitle
         subtitle = QLabel("Upload a CSV file containing your contact list with email, firstname, and lastname columns")
         subtitle.setAlignment(Qt.AlignCenter)
-        subtitle.setStyleSheet("color: #666; font-size: 14px; margin-bottom: 20px;")
+        subtitle.setStyleSheet(SUBTITLE_STYLE)
         subtitle.setWordWrap(True)
         header_layout.addWidget(subtitle)
         
@@ -76,7 +76,7 @@ class UploadScreen(QWidget):
         # Back button (for future use)
         self.back_button = QPushButton("← Back")
         self.back_button.setEnabled(False)  # Not used in first screen
-        self.back_button.setStyleSheet("padding: 10px 20px;")
+        self.back_button.setStyleSheet(BUTTON_STYLE)
         nav_layout.addWidget(self.back_button)
         
         # Add spacing
@@ -85,23 +85,7 @@ class UploadScreen(QWidget):
         # Next button
         self.next_button = QPushButton("Next: Review Contacts →")
         self.next_button.setEnabled(False)  # Enabled only when file is uploaded
-        self.next_button.setStyleSheet("""
-            QPushButton {
-                padding: 10px 20px;
-                background-color: #007acc;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                font-weight: bold;
-            }
-            QPushButton:enabled:hover {
-                background-color: #005f99;
-            }
-            QPushButton:disabled {
-                background-color: #ccc;
-                color: #666;
-            }
-        """)
+        self.next_button.setStyleSheet(SUCCESS_BUTTON_STYLE)
         self.next_button.clicked.connect(self.on_next_clicked)
         nav_layout.addWidget(self.next_button)
         

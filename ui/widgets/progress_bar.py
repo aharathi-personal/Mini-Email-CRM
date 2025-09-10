@@ -12,6 +12,13 @@ from PyQt5.QtCore import Qt, pyqtSignal, QTimer, QPropertyAnimation, QEasingCurv
 from PyQt5.QtGui import QFont, QPalette, QTextCursor
 from datetime import datetime
 
+from ui.styles.stylesheet import (
+    TITLE_STYLE, SUBTITLE_STYLE, BUTTON_STYLE, SUCCESS_BUTTON_STYLE, 
+    ERROR_BUTTON_STYLE, CARD_STYLE, SUCCESS_BADGE_STYLE, ERROR_BADGE_STYLE,
+    PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, LIGHT_GREY, DARK_GREY, BORDER_GREY,
+    FONT_SIZE_SMALL, WARNING_ORANGE
+)
+
 
 class ProgressDisplayWidget(QWidget):
     """
@@ -81,26 +88,13 @@ class ProgressDisplayWidget(QWidget):
         
         # Title
         self.title_label = QLabel("Step 4 of 4: Sending Emails")
-        self.title_label.setStyleSheet("""
-            QLabel {
-                font-size: 24px;
-                font-weight: bold;
-                color: #333333;
-                margin-bottom: 5px;
-            }
-        """)
+        self.title_label.setStyleSheet(TITLE_STYLE)
         layout.addWidget(self.title_label)
         
         # Timestamp
         self.timestamp_label = QLabel()
         self.update_timestamp()
-        self.timestamp_label.setStyleSheet("""
-            QLabel {
-                font-size: 14px;
-                color: #666666;
-                margin-bottom: 10px;
-            }
-        """)
+        self.timestamp_label.setStyleSheet(SUBTITLE_STYLE)
         layout.addWidget(self.timestamp_label)
         
         return layout
@@ -108,27 +102,20 @@ class ProgressDisplayWidget(QWidget):
     def create_progress_section(self):
         """Create the progress bar section"""
         section = QFrame()
-        section.setStyleSheet("""
-            QFrame {
-                background-color: #FAFAFA;
-                border: 1px solid #E0E0E0;
-                border-radius: 8px;
-                padding: 20px;
-            }
-        """)
+        section.setStyleSheet(CARD_STYLE)
         
         layout = QVBoxLayout()
         layout.setSpacing(15)
         
         # Progress text
         self.progress_label = QLabel("Preparing to send emails...")
-        self.progress_label.setStyleSheet("""
-            QLabel {
+        self.progress_label.setStyleSheet(f"""
+            QLabel {{
                 font-size: 16px;
                 font-weight: bold;
-                color: #333333;
+                color: {DARK_GREY};
                 text-align: center;
-            }
+            }}
         """)
         self.progress_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.progress_label)
@@ -138,22 +125,22 @@ class ProgressDisplayWidget(QWidget):
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
-        self.progress_bar.setStyleSheet("""
-            QProgressBar {
-                border: 2px solid #E0E0E0;
+        self.progress_bar.setStyleSheet(f"""
+            QProgressBar {{
+                border: 2px solid {BORDER_GREY};
                 border-radius: 8px;
-                background-color: #F5F5F5;
+                background-color: {LIGHT_GREY};
                 text-align: center;
                 font-weight: bold;
-                font-size: 12px;
-                color: #333333;
+                font-size: {FONT_SIZE_SMALL};
+                color: {DARK_GREY};
                 height: 25px;
-            }
-            QProgressBar::chunk {
-                background-color: #2196F3;
+            }}
+            QProgressBar::chunk {{
+                background-color: {PRIMARY_BLUE};
                 border-radius: 6px;
                 margin: 1px;
-            }
+            }}
         """)
         layout.addWidget(self.progress_bar)
         
@@ -163,14 +150,7 @@ class ProgressDisplayWidget(QWidget):
     def create_status_section(self):
         """Create the current status section"""
         section = QFrame()
-        section.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border: 1px solid #E0E0E0;
-                border-radius: 6px;
-                padding: 15px;
-            }
-        """)
+        section.setStyleSheet(CARD_STYLE)
         
         layout = QVBoxLayout()
         layout.setSpacing(8)
@@ -224,20 +204,7 @@ class ProgressDisplayWidget(QWidget):
         
         # Success badge
         self.success_badge = QLabel("0")
-        self.success_badge.setStyleSheet("""
-            QLabel {
-                background-color: #4CAF50;
-                color: white;
-                border-radius: 15px;
-                font-size: 14px;
-                font-weight: bold;
-                min-width: 30px;
-                max-width: 50px;
-                min-height: 30px;
-                max-height: 30px;
-                text-align: center;
-            }
-        """)
+        self.success_badge.setStyleSheet(SUCCESS_BADGE_STYLE)
         self.success_badge.setAlignment(Qt.AlignCenter)
         success_layout.addWidget(self.success_badge)
         
@@ -270,20 +237,7 @@ class ProgressDisplayWidget(QWidget):
         
         # Failed badge
         self.failed_badge = QLabel("0")
-        self.failed_badge.setStyleSheet("""
-            QLabel {
-                background-color: #F44336;
-                color: white;
-                border-radius: 15px;
-                font-size: 14px;
-                font-weight: bold;
-                min-width: 30px;
-                max-width: 50px;
-                min-height: 30px;
-                max-height: 30px;
-                text-align: center;
-            }
-        """)
+        self.failed_badge.setStyleSheet(ERROR_BADGE_STYLE)
         self.failed_badge.setAlignment(Qt.AlignCenter)
         failed_layout.addWidget(self.failed_badge)
         
@@ -347,70 +301,38 @@ class ProgressDisplayWidget(QWidget):
         layout.setSpacing(15)
         
         # Pause/Resume button
+        # Pause/Resume button
         self.pause_button = QPushButton("Pause Sending")
-        self.pause_button.setStyleSheet("""
-            QPushButton {
-                background-color: #FF9800;
+        self.pause_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {WARNING_ORANGE};
                 color: white;
                 border: none;
                 padding: 12px 20px;
                 border-radius: 6px;
                 font-weight: bold;
-                font-size: 12px;
+                font-size: {FONT_SIZE_SMALL};
                 min-width: 120px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #F57C00;
-            }
-            QPushButton:disabled {
-                background-color: #CCCCCC;
-                color: #666666;
-            }
+            }}
+            QPushButton:pressed {{
+                background-color: #E65100;
+            }}
         """)
         layout.addWidget(self.pause_button)
         
         # Cancel button
         self.cancel_button = QPushButton("Cancel Remaining")
-        self.cancel_button.setStyleSheet("""
-            QPushButton {
-                background-color: #F44336;
-                color: white;
-                border: none;
-                padding: 12px 20px;
-                border-radius: 6px;
-                font-weight: bold;
-                font-size: 12px;
-                min-width: 120px;
-            }
-            QPushButton:hover {
-                background-color: #D32F2F;
-            }
-            QPushButton:disabled {
-                background-color: #CCCCCC;
-                color: #666666;
-            }
-        """)
+        self.cancel_button.setStyleSheet(ERROR_BUTTON_STYLE)
         layout.addWidget(self.cancel_button)
         
         layout.addStretch()
         
         # Exit button
         self.exit_button = QPushButton("Exit")
-        self.exit_button.setStyleSheet("""
-            QPushButton {
-                background-color: #607D8B;
-                color: white;
-                border: none;
-                padding: 12px 20px;
-                border-radius: 6px;
-                font-weight: bold;
-                font-size: 12px;
-                min-width: 80px;
-            }
-            QPushButton:hover {
-                background-color: #455A64;
-            }
-        """)
+        self.exit_button.setStyleSheet(BUTTON_STYLE)
         layout.addWidget(self.exit_button)
         
         section.setLayout(layout)

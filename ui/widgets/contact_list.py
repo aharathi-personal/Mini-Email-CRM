@@ -11,6 +11,12 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from PyQt5.QtGui import QFont, QPalette
 
+from ui.styles.stylesheet import (
+    INPUT_STYLE, CARD_STYLE, SUBTITLE_STYLE,
+    PRIMARY_BLUE, BORDER_GREY, DARK_GREY, LIGHT_GREY,
+    FONT_SIZE_SMALL
+)
+
 
 class ContactListWidget(QWidget):
     """
@@ -50,13 +56,13 @@ class ContactListWidget(QWidget):
     def create_search_bar(self):
         """Create the search bar widget"""
         search_frame = QFrame()
-        search_frame.setStyleSheet("""
-            QFrame {
+        search_frame.setStyleSheet(f"""
+            QFrame {{
                 background-color: white;
-                border: 1px solid #DDDDDD;
+                border: 1px solid {BORDER_GREY};
                 border-radius: 4px;
                 padding: 2px;
-            }
+            }}
         """)
         
         layout = QHBoxLayout()
@@ -65,30 +71,30 @@ class ContactListWidget(QWidget):
         
         # Search icon (using Unicode character)
         search_icon = QLabel("🔍")
-        search_icon.setStyleSheet("""
-            QLabel {
+        search_icon.setStyleSheet(f"""
+            QLabel {{
                 font-size: 14px;
-                color: #666666;
+                color: {DARK_GREY};
                 border: none;
                 background: transparent;
-            }
+            }}
         """)
         layout.addWidget(search_icon)
         
         # Search input field
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search")
-        self.search_input.setStyleSheet("""
-            QLineEdit {
+        self.search_input.setStyleSheet(f"""
+            QLineEdit {{
                 border: none;
-                font-size: 12px;
-                color: #333333;
+                font-size: {FONT_SIZE_SMALL};
+                color: {DARK_GREY};
                 background: transparent;
                 padding: 4px 0;
-            }
-            QLineEdit::placeholder {
+            }}
+            QLineEdit::placeholder {{
                 color: #999999;
-            }
+            }}
         """)
         layout.addWidget(self.search_input)
         
@@ -98,30 +104,30 @@ class ContactListWidget(QWidget):
     def create_contact_list(self):
         """Create the scrollable contact list"""
         contact_list = QListWidget()
-        contact_list.setStyleSheet("""
-            QListWidget {
-                border: 1px solid #DDDDDD;
+        contact_list.setStyleSheet(f"""
+            QListWidget {{
+                border: 1px solid {BORDER_GREY};
                 border-radius: 4px;
                 background-color: white;
                 selection-background-color: #E3F2FD;
-                selection-color: #333333;
+                selection-color: {DARK_GREY};
                 outline: none;
-            }
-            QListWidget::item {
+            }}
+            QListWidget::item {{
                 padding: 12px;
                 border-bottom: 1px solid #F0F0F0;
-                color: #333333;
-            }
-            QListWidget::item:hover {
-                background-color: #F5F5F5;
-            }
-            QListWidget::item:selected {
+                color: {DARK_GREY};
+            }}
+            QListWidget::item:hover {{
+                background-color: {LIGHT_GREY};
+            }}
+            QListWidget::item:selected {{
                 background-color: #E3F2FD;
-                color: #333333;
-            }
-            QListWidget::item:selected:hover {
+                color: {DARK_GREY};
+            }}
+            QListWidget::item:selected:hover {{
                 background-color: #BBDEFB;
-            }
+            }}
         """)
         
         # Enable single selection only
@@ -373,14 +379,14 @@ if __name__ == "__main__":
     
     # Info panel
     info_label = QLabel("Select a contact to see details here")
-    info_label.setStyleSheet("""
-        QLabel {
-            background-color: #F5F5F5;
-            border: 1px solid #DDDDDD;
+    info_label.setStyleSheet(f"""
+        QLabel {{
+            background-color: {LIGHT_GREY};
+            border: 1px solid {BORDER_GREY};
             border-radius: 4px;
             padding: 20px;
-            font-size: 12px;
-        }
+            font-size: {FONT_SIZE_SMALL};
+        }}
     """)
     
     # Connect signals for testing

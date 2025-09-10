@@ -12,6 +12,11 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont, QPalette, QDragEnterEvent, QDropEvent
 
+from ui.styles.stylesheet import (
+    BUTTON_STYLE, SUBTITLE_STYLE, CARD_STYLE, SUCCESS_GREEN, ERROR_RED,
+    DARK_GREY, LIGHT_GREY, BORDER_GREY, FONT_SIZE_SMALL
+)
+
 
 class FileUploadWidget(QWidget):
     """
@@ -62,16 +67,16 @@ class FileUploadWidget(QWidget):
         drop_frame.setFrameStyle(QFrame.Box)
         drop_frame.setLineWidth(2)
         drop_frame.setAcceptDrops(True)
-        drop_frame.setStyleSheet("""
-            QFrame {
-                border: 2px dashed #ccc;
+        drop_frame.setStyleSheet(f"""
+            QFrame {{
+                border: 2px dashed {BORDER_GREY};
                 border-radius: 10px;
-                background-color: #f9f9f9;
-            }
-            QFrame:hover {
+                background-color: {LIGHT_GREY};
+            }}
+            QFrame:hover {{
                 border-color: #007acc;
                 background-color: #f0f8ff;
-            }
+            }}
         """)
         
         # Add content to drop zone
@@ -86,13 +91,13 @@ class FileUploadWidget(QWidget):
         # Instruction text
         instruction_label = QLabel("Drag and drop CSV file here")
         instruction_label.setAlignment(Qt.AlignCenter)
-        instruction_label.setStyleSheet("font-size: 14px; color: #666; border: none; background: transparent;")
+        instruction_label.setStyleSheet(f"font-size: 14px; color: {DARK_GREY}; border: none; background: transparent;")
         layout.addWidget(instruction_label)
         
         # Supported formats
         format_label = QLabel("Supported: .csv files with email, firstname, lastname columns")
         format_label.setAlignment(Qt.AlignCenter)
-        format_label.setStyleSheet("font-size: 11px; color: #999; border: none; background: transparent;")
+        format_label.setStyleSheet(f"font-size: {FONT_SIZE_SMALL}; color: #999; border: none; background: transparent;")
         layout.addWidget(format_label)
         
         drop_frame.setLayout(layout)
@@ -244,12 +249,12 @@ class FileUploadWidget(QWidget):
     def show_validation_success(self, message):
         """Show validation success message"""
         self.feedback_label.setText(f"✅ {message}")
-        self.feedback_label.setStyleSheet("color: #28a745; font-weight: bold;")
+        self.feedback_label.setStyleSheet(f"color: {SUCCESS_GREEN}; font-weight: bold;")
         
     def show_validation_error(self, message):
         """Show validation error message"""
         self.feedback_label.setText(f"❌ {message}")
-        self.feedback_label.setStyleSheet("color: #dc3545; font-weight: bold;")
+        self.feedback_label.setStyleSheet(f"color: {ERROR_RED}; font-weight: bold;")
         self.validation_error.emit(message)
         
         # Reset drop zone style

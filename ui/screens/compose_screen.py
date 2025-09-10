@@ -13,6 +13,11 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 
 from ui.widgets.email_editor import EmailEditor
+from ui.styles.stylesheet import (
+    BUTTON_STYLE, SUCCESS_BUTTON_STYLE, ERROR_BUTTON_STYLE,
+    INPUT_STYLE, CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE,
+    PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, LIGHT_GREY, BORDER_GREY
+)
 
 
 class ComposeScreen(QWidget):
@@ -71,13 +76,7 @@ class ComposeScreen(QWidget):
         
         # Step indicator
         step_label = QLabel("Step 2 of 4: Compose Email")
-        step_label.setStyleSheet("""
-            QLabel {
-                font-size: 18px;
-                font-weight: bold;
-                color: #333333;
-            }
-        """)
+        step_label.setStyleSheet(TITLE_STYLE)
         layout.addWidget(step_label)
         
         # Spacer
@@ -85,16 +84,7 @@ class ComposeScreen(QWidget):
         
         # Contact count status
         self.status_label = QLabel("Ready to send to 0 contacts")
-        self.status_label.setStyleSheet("""
-            QLabel {
-                font-size: 14px;
-                color: #666666;
-                background-color: #F5F5F5;
-                padding: 8px 12px;
-                border-radius: 4px;
-                border: 1px solid #DDDDDD;
-            }
-        """)
+        self.status_label.setStyleSheet(SUBTITLE_STYLE)
         layout.addWidget(self.status_label)
         
         return layout
@@ -120,24 +110,7 @@ class ComposeScreen(QWidget):
     def create_from_settings(self):
         """Create the compact From settings section"""
         group = QGroupBox("From settings")
-        group.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                font-size: 13px;
-                color: #333333;
-                border: 1px solid #DDDDDD;
-                border-radius: 6px;
-                margin: 3px 0;
-                padding-top: 15px;
-                background-color: white;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 8px;
-                padding: 0 4px 0 4px;
-                background-color: white;
-            }
-        """)
+        group.setStyleSheet(CARD_STYLE)
         
         layout = QVBoxLayout()
         layout.setContentsMargins(15, 15, 15, 20)
@@ -145,31 +118,12 @@ class ComposeScreen(QWidget):
         
         # From Email field
         from_email_label = QLabel("From Email")
-        from_email_label.setStyleSheet("""
-            QLabel {
-                font-weight: bold;
-                font-size: 11px;
-                color: #333333;
-                margin-bottom: 5px;
-            }
-        """)
+        from_email_label.setStyleSheet(SUBTITLE_STYLE)
         layout.addWidget(from_email_label)
         
         self.from_email_input = QLineEdit()
         self.from_email_input.setPlaceholderText("your-email@example.com")
-        self.from_email_input.setStyleSheet("""
-            QLineEdit {
-                border: 1px solid #DDDDDD;
-                border-radius: 4px;
-                padding: 10px 12px;
-                font-size: 12px;
-                background-color: white;
-                min-height: 20px;
-            }
-            QLineEdit:focus {
-                border-color: #2196F3;
-            }
-        """)
+        self.from_email_input.setStyleSheet(INPUT_STYLE)
         layout.addWidget(self.from_email_input)
         
         # Spacer between fields
@@ -177,31 +131,12 @@ class ComposeScreen(QWidget):
         
         # Email subject field
         subject_label = QLabel("Email subject")
-        subject_label.setStyleSheet("""
-            QLabel {
-                font-weight: bold;
-                font-size: 11px;
-                color: #333333;
-                margin-bottom: 5px;
-            }
-        """)
+        subject_label.setStyleSheet(SUBTITLE_STYLE)
         layout.addWidget(subject_label)
         
         self.subject_input = QLineEdit()
         self.subject_input.setPlaceholderText("Enter your email subject...")
-        self.subject_input.setStyleSheet("""
-            QLineEdit {
-                border: 1px solid #DDDDDD;
-                border-radius: 4px;
-                padding: 10px 12px;
-                font-size: 12px;
-                background-color: white;
-                min-height: 20px;
-            }
-            QLineEdit:focus {
-                border-color: #2196F3;
-            }
-        """)
+        self.subject_input.setStyleSheet(INPUT_STYLE)
         layout.addWidget(self.subject_input)
         
         # Add some bottom spacing
@@ -213,24 +148,7 @@ class ComposeScreen(QWidget):
     def create_personalization_help(self):
         """Create the expanded personalization help section"""
         group = QGroupBox("Personalization help")
-        group.setStyleSheet("""
-            QGroupBox {
-                font-weight: bold;
-                font-size: 13px;
-                color: #333333;
-                border: 1px solid #DDDDDD;
-                border-radius: 6px;
-                margin: 3px 0;
-                padding-top: 15px;
-                background-color: white;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 8px;
-                padding: 0 4px 0 4px;
-                background-color: white;
-            }
-        """)
+        group.setStyleSheet(CARD_STYLE)
         
         layout = QVBoxLayout()
         layout.setContentsMargins(15, 15, 15, 20)
@@ -238,21 +156,14 @@ class ComposeScreen(QWidget):
         
         # Available placeholders label
         placeholders_label = QLabel("Available placeholders:")
-        placeholders_label.setStyleSheet("""
-            QLabel {
-                font-weight: normal; 
-                color: #333333; 
-                margin: 5px 0;
-                font-size: 11px;
-            }
-        """)
+        placeholders_label.setStyleSheet(SUBTITLE_STYLE)
         layout.addWidget(placeholders_label)
         
         # Create expanded placeholder list
         self.placeholder_list = QListWidget()
-        self.placeholder_list.setStyleSheet("""
-            QListWidget {
-                border: 1px solid #DDDDDD;
+        self.placeholder_list.setStyleSheet(f"""
+            QListWidget {{
+                border: 1px solid {BORDER_GREY};
                 border-radius: 4px;
                 background-color: white;
                 selection-background-color: #2196F3;
@@ -261,19 +172,19 @@ class ComposeScreen(QWidget):
                 font-size: 11px;
                 min-height: 120px;
                 max-height: 120px;
-            }
-            QListWidget::item {
+            }}
+            QListWidget::item {{
                 padding: 8px 10px;
                 border-bottom: 1px solid #F0F0F0;
                 color: #333333;
-            }
-            QListWidget::item:hover {
+            }}
+            QListWidget::item:hover {{
                 background-color: #E3F2FD;
-            }
-            QListWidget::item:selected {
-                background-color: #2196F3;
+            }}
+            QListWidget::item:selected {{
+                background-color: {PRIMARY_BLUE};
                 color: white;
-            }
+            }}
         """)
         
         # Add placeholders to list
@@ -290,24 +201,7 @@ class ComposeScreen(QWidget):
         # Expanded insert button
         insert_btn = QPushButton("Insert Selected")
         insert_btn.clicked.connect(self.insert_selected_placeholder)
-        insert_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #2196F3;
-                color: white;
-                border: none;
-                padding: 10px 15px;
-                border-radius: 4px;
-                font-weight: bold;
-                font-size: 11px;
-                min-height: 25px;
-            }
-            QPushButton:hover {
-                background-color: #1976D2;
-            }
-            QPushButton:pressed {
-                background-color: #1565C0;
-            }
-        """)
+        insert_btn.setStyleSheet(BUTTON_STYLE)
         layout.addWidget(insert_btn)
         
         # Add some bottom spacing
@@ -336,25 +230,25 @@ class ComposeScreen(QWidget):
         # Back button
         back_btn = QPushButton("Back")
         back_btn.clicked.connect(self.on_back_clicked)
-        back_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #F5F5F5;
+        back_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {LIGHT_GREY};
                 color: #333333;
-                border: 2px solid #DDDDDD;
+                border: 2px solid {BORDER_GREY};
                 padding: 10px 20px;
                 border-radius: 4px;
                 font-weight: bold;
                 font-size: 12px;
                 min-width: 80px;
                 min-height: 36px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background-color: #EEEEEE;
                 border-color: #CCCCCC;
-            }
-            QPushButton:pressed {
+            }}
+            QPushButton:pressed {{
                 background-color: #E0E0E0;
-            }
+            }}
         """)
         layout.addWidget(back_btn)
         
@@ -364,55 +258,14 @@ class ComposeScreen(QWidget):
         # Preview Emails button (primary)
         self.preview_btn = QPushButton("Preview Emails")
         self.preview_btn.clicked.connect(self.on_preview_clicked)
-        self.preview_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #2196F3;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 4px;
-                font-weight: bold;
-                font-size: 12px;
-                min-width: 120px;
-                min-height: 36px;
-            }
-            QPushButton:hover {
-                background-color: #1976D2;
-            }
-            QPushButton:pressed {
-                background-color: #1565C0;
-            }
-            QPushButton:disabled {
-                background-color: #CCCCCC;
-                color: #666666;
-            }
-        """)
+        self.preview_btn.setStyleSheet(BUTTON_STYLE)
         self.preview_btn.setEnabled(False)  # Disabled until content is ready
         layout.addWidget(self.preview_btn)
         
         # Exit button
         exit_btn = QPushButton("Exit")
         exit_btn.clicked.connect(self.on_exit_clicked)
-        exit_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #F5F5F5;
-                color: #333333;
-                border: 2px solid #DDDDDD;
-                padding: 10px 20px;
-                border-radius: 4px;
-                font-weight: bold;
-                font-size: 12px;
-                min-width: 80px;
-                min-height: 36px;
-            }
-            QPushButton:hover {
-                background-color: #EEEEEE;
-                border-color: #CCCCCC;
-            }
-            QPushButton:pressed {
-                background-color: #E0E0E0;
-            }
-        """)
+        exit_btn.setStyleSheet(ERROR_BUTTON_STYLE)
         layout.addWidget(exit_btn)
         
         return layout

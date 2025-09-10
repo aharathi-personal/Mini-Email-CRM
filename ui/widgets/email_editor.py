@@ -12,6 +12,12 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from PyQt5.QtGui import QFont, QTextCharFormat, QTextCursor, QPalette
 
+from ui.styles.stylesheet import (
+    BUTTON_STYLE, INPUT_STYLE, CARD_STYLE, SUBTITLE_STYLE,
+    PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, BORDER_GREY, LIGHT_GREY,
+    FONT_SIZE_SMALL, DARK_GREY, WARNING_ORANGE
+)
+
 
 class EmailEditor(QWidget):
     """
@@ -43,14 +49,7 @@ class EmailEditor(QWidget):
         
         # Email body label
         body_label = QLabel("Email body")
-        body_label.setStyleSheet("""
-            QLabel {
-                font-weight: bold;
-                font-size: 14px;
-                color: #333333;
-                margin-bottom: 5px;
-            }
-        """)
+        body_label.setStyleSheet(SUBTITLE_STYLE)
         main_layout.addWidget(body_label)
         
         # Create formatting toolbar
@@ -72,13 +71,13 @@ class EmailEditor(QWidget):
         toolbar = QFrame()
         toolbar.setFrameStyle(QFrame.Box)
         toolbar.setLineWidth(1)
-        toolbar.setStyleSheet("""
-            QFrame {
-                background-color: #F5F5F5;
-                border: 1px solid #DDDDDD;
+        toolbar.setStyleSheet(f"""
+            QFrame {{
+                background-color: {LIGHT_GREY};
+                border: 1px solid {BORDER_GREY};
                 border-radius: 4px;
                 padding: 4px;
-            }
+            }}
         """)
         
         layout = QHBoxLayout()
@@ -107,7 +106,7 @@ class EmailEditor(QWidget):
         separator = QFrame()
         separator.setFrameShape(QFrame.VLine)
         separator.setFrameShadow(QFrame.Sunken)
-        separator.setStyleSheet("color: #DDDDDD; margin: 2px;")
+        separator.setStyleSheet(f"color: {BORDER_GREY}; margin: 2px;")
         layout.addWidget(separator)
         
         # Add spacer to push buttons to the left
@@ -119,29 +118,29 @@ class EmailEditor(QWidget):
         
     def get_toolbar_button_style(self):
         """Get consistent toolbar button styling following UI Guidelines"""
-        return """
-            QPushButton {
+        return f"""
+            QPushButton {{
                 min-width: 28px;
                 min-height: 28px;
-                border: 1px solid #DDDDDD;
+                border: 1px solid {BORDER_GREY};
                 border-radius: 3px;
                 background-color: white;
-                color: #333333;
-                font-size: 12px;
-            }
-            QPushButton:hover {
+                color: {DARK_GREY};
+                font-size: {FONT_SIZE_SMALL};
+            }}
+            QPushButton:hover {{
                 background-color: #E3F2FD;
-                border-color: #2196F3;
-            }
-            QPushButton:pressed {
-                background-color: #2196F3;
+                border-color: {PRIMARY_BLUE};
+            }}
+            QPushButton:pressed {{
+                background-color: {PRIMARY_BLUE};
                 color: white;
-            }
-            QPushButton:checked {
-                background-color: #2196F3;
+            }}
+            QPushButton:checked {{
+                background-color: {PRIMARY_BLUE};
                 color: white;
                 border-color: #1976D2;
-            }
+            }}
         """
         
     def create_toolbar_button(self, text, tooltip, callback):
@@ -157,22 +156,7 @@ class EmailEditor(QWidget):
         editor = QTextEdit()
         editor.setMinimumHeight(200)
         editor.setMaximumHeight(350)
-        editor.setStyleSheet("""
-            QTextEdit {
-                border: 2px solid #DDDDDD;
-                border-radius: 4px;
-                padding: 12px;
-                font-family: Arial, sans-serif;
-                font-size: 14px;
-                line-height: 1.4;
-                background-color: white;
-                color: #333333;
-            }
-            QTextEdit:focus {
-                border-color: #2196F3;
-                outline: none;
-            }
-        """)
+        editor.setStyleSheet(INPUT_STYLE)
         
         # Set placeholder text (as seen in Screen 2)
         editor.setPlaceholderText("Dear {firstname},\n\nI hope this email finds you well.")
@@ -187,13 +171,13 @@ class EmailEditor(QWidget):
         """Create the character count display (27/5000 format from Screen 2)"""
         counter = QLabel("0/5000")
         counter.setAlignment(Qt.AlignRight)
-        counter.setStyleSheet("""
-            QLabel {
-                color: #666666;
-                font-size: 12px;
+        counter.setStyleSheet(f"""
+            QLabel {{
+                color: {DARK_GREY};
+                font-size: {FONT_SIZE_SMALL};
                 padding: 4px;
                 background-color: transparent;
-            }
+            }}
         """)
         return counter
         
@@ -267,11 +251,11 @@ class EmailEditor(QWidget):
         
         # Change color based on character limit (following UI Guidelines)
         if char_count > self.max_characters:
-            self.char_count_label.setStyleSheet("color: #F44336; font-weight: bold;")  # Error red
+            self.char_count_label.setStyleSheet(f"color: {ERROR_RED}; font-weight: bold;")  # Error red
         elif char_count > self.max_characters * 0.9:  # 90% of limit
-            self.char_count_label.setStyleSheet("color: #FF9800; font-weight: bold;")  # Warning orange
+            self.char_count_label.setStyleSheet(f"color: {WARNING_ORANGE}; font-weight: bold;")  # Warning orange
         else:
-            self.char_count_label.setStyleSheet("color: #666666; font-weight: normal;")
+            self.char_count_label.setStyleSheet(f"color: {DARK_GREY}; font-weight: normal;")
             
         # Emit character count signal
         self.character_count_changed.emit(char_count, self.max_characters)
