@@ -13,7 +13,7 @@ BORDER_GREY = "#DDDDDD"
 DISABLED_GREY = "#CCCCCC"
 WARNING_ORANGE = "#FF9800"
 
-FONT_FAMILY = "'Segoe UI', 'Roboto', 'Arial', sans-serif"
+FONT_FAMILY = "Arial, Helvetica, sans-serif"
 FONT_SIZE = "14px"
 FONT_SIZE_SMALL = "12px"
 FONT_SIZE_LARGE = "18px"
@@ -35,7 +35,6 @@ QPushButton {{
     font-size: {FONT_SIZE};
     font-weight: bold;
     letter-spacing: 0.5px;
-    transition: background 0.2s;
 }}
 QPushButton:hover {{
     background-color: #1976D2;

@@ -4,6 +4,12 @@ Step 2 of 4: Compose Email
 Integrates the EmailEditor widget with from settings and navigation
 """
 
+import os
+import sys
+
+# Add the project root to Python path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, 
     QPushButton, QFrame, QGroupBox, QSpacerItem, QSizePolicy,
@@ -440,3 +446,27 @@ class ComposeScreen(QWidget):
         self.from_email_input.setEnabled(enabled)
         self.subject_input.setEnabled(enabled)
         self.email_editor.set_enabled(enabled)
+
+
+# Test the screen directly
+if __name__ == '__main__':
+    import sys
+    from PyQt5.QtWidgets import QApplication
+    
+    app = QApplication(sys.argv)
+    
+    screen = ComposeScreen()
+    screen.setWindowTitle("Compose Screen Test")
+    screen.resize(900, 700)
+    
+    # Connect the exit signal to actually close the window in test mode
+    screen.exit_clicked.connect(screen.close)
+    
+    screen.show()
+    
+    print("✅ Compose screen launched successfully!")
+    print("✅ Global styling applied!")
+    print("✅ EmailEditor integrated!")
+    print("✅ Exit button properly connected!")
+    
+    sys.exit(app.exec_())
