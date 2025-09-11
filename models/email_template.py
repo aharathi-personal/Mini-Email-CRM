@@ -6,8 +6,10 @@ Handles email templates with placeholder personalization system
 import re
 from enum import Enum
 from typing import List, Dict, Optional, Set
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
+
+from .attachment import AttachmentManager
 
 
 class TemplateType(Enum):
@@ -22,10 +24,11 @@ class TemplateType(Enum):
 @dataclass
 class EmailTemplate:
     """
-    Email template with placeholder personalization system
+    Email template with placeholder personalization system and attachment support
     
     Supports placeholders: {firstname}, {lastname}, {email}, {fullname}, {company}, {title}
     Both subject and body support personalization
+    Includes attachment management for email campaigns
     """
     
     subject: str
@@ -34,6 +37,7 @@ class EmailTemplate:
     name: Optional[str] = None
     description: Optional[str] = None
     created_at: Optional[datetime] = None
+    attachments: AttachmentManager = field(default_factory=AttachmentManager)
     
     # Supported placeholders for validation and replacement
     SUPPORTED_PLACEHOLDERS = {
@@ -75,6 +79,61 @@ class EmailTemplate:
         """Get all placeholders used in both subject and body"""
         return self.get_subject_placeholders().union(self.get_body_placeholders())
     
+    # === Attachment Management ===
+    
+    def add_attachment(self, filepath: str) -> List[str]:
+        """
+        Add attachment from file path
+        
+        Args:
+            filepath: Path to the file to attach
+            
+        Returns:
+            List of validation errors, empty if successful
+        """
+        return self.attachments.add_attachment_from_file(filepath)
+    
+    def remove_attachment(self, filename: str) -> bool:
+        """
+        Remove attachment by filename
+        
+        Args:
+            filename: Name of the file to remove
+            
+        Returns:
+            True if removed, False if not found
+        """
+        return self.attachments.remove_attachment(filename)
+    
+    def get_attachments(self):
+        """Get list of all attachments"""
+        return self.attachments.get_attachments()
+    
+    def get_attachment_count(self) -> int:
+        """Get number of attachments"""
+        return self.attachments.get_attachment_count()
+    
+    def get_attachment_summary(self) -> Dict:
+        """Get attachment summary for display"""
+        return self.attachments.get_summary()
+    
+    def has_attachments(self) -> bool:
+        """Check if template has any attachments"""
+        return self.attachments.get_attachment_count() > 0
+    
+    def clear_attachments(self) -> None:
+        """Remove all attachments"""
+        self.attachments.clear_attachments()
+    
+    def validate_attachments(self) -> List[str]:
+        """
+        Validate all attachments
+        
+        Returns:
+            List of attachment validation errors
+        """
+        return self.attachments.validate_all()
+    
     def validate_placeholders(self) -> List[str]:
         """
         Validate that all placeholders are supported
@@ -91,7 +150,7 @@ class EmailTemplate:
     
     def validate(self) -> List[str]:
         """
-        Comprehensive template validation
+        Comprehensive template validation including attachments
         Returns list of error messages, empty list means valid
         """
         errors = []
@@ -113,6 +172,10 @@ class EmailTemplate:
         
         if len(self.body) > 50000:  # ~50KB limit
             errors.append("Email body too long (maximum 50,000 characters)")
+        
+        # Attachment validation
+        attachment_errors = self.validate_attachments()
+        errors.extend(attachment_errors)
         
         return errors
     
@@ -201,7 +264,9 @@ class EmailTemplate:
             'template_type': self.template_type.value,
             'description': self.description,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'placeholders': list(self.get_all_placeholders())
+            'placeholders': list(self.get_all_placeholders()),
+            'attachments': self.attachments.to_dict(),
+            'attachment_summary': self.get_attachment_summary()
         }
     
     @classmethod
@@ -212,7 +277,8 @@ class EmailTemplate:
         if data.get('created_at'):
             created_at = datetime.fromisoformat(data['created_at'])
         
-        return cls(
+        # Create template
+        template = cls(
             subject=data['subject'],
             body=data['body'],
             template_type=template_type,
@@ -220,10 +286,16 @@ class EmailTemplate:
             description=data.get('description'),
             created_at=created_at
         )
+        
+        # Load attachments if present
+        if 'attachments' in data:
+            template.attachments = AttachmentManager.from_dict(data['attachments'])
+        
+        return template
     
     def copy(self) -> 'EmailTemplate':
-        """Create a copy of the template"""
-        return EmailTemplate(
+        """Create a copy of the template including attachments"""
+        copied_template = EmailTemplate(
             subject=self.subject,
             body=self.body,
             template_type=self.template_type,
@@ -231,6 +303,12 @@ class EmailTemplate:
             description=self.description,
             created_at=datetime.now()
         )
+        
+        # Copy attachments
+        for attachment in self.get_attachments():
+            copied_template.attachments.attachments.append(attachment)
+        
+        return copied_template
     
     def __str__(self) -> str:
         """String representation for logging"""

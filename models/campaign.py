@@ -11,6 +11,7 @@ import uuid
 
 from .contact import Contact
 from .email_template import EmailTemplate
+from .attachment import AttachmentManager
 
 
 class CampaignStatus(Enum):
@@ -68,6 +69,7 @@ class Campaign:
     # Campaign data
     contacts: List[Contact] = field(default_factory=list)
     email_template: Optional[EmailTemplate] = None
+    attachments: AttachmentManager = field(default_factory=AttachmentManager)
     
     # State management
     status: CampaignStatus = CampaignStatus.DRAFT
@@ -150,6 +152,73 @@ class Campaign:
             self.email_template is not None and
             self.status in [CampaignStatus.TEMPLATE_READY, CampaignStatus.READY_TO_SEND]
         )
+    
+    # === Attachment Management ===
+    
+    def add_attachment(self, filepath: str) -> List[str]:
+        """
+        Add attachment to campaign
+        
+        Args:
+            filepath: Path to the file to attach
+            
+        Returns:
+            List of validation errors, empty if successful
+        """
+        return self.attachments.add_attachment_from_file(filepath)
+    
+    def remove_attachment(self, filename: str) -> bool:
+        """
+        Remove attachment by filename
+        
+        Args:
+            filename: Name of the file to remove
+            
+        Returns:
+            True if removed, False if not found
+        """
+        return self.attachments.remove_attachment(filename)
+    
+    def get_attachments(self):
+        """Get list of all campaign attachments"""
+        return self.attachments.get_attachments()
+    
+    def get_attachment_count(self) -> int:
+        """Get number of attachments"""
+        return self.attachments.get_attachment_count()
+    
+    def get_attachment_summary(self) -> Dict:
+        """Get attachment summary for display"""
+        return self.attachments.get_summary()
+    
+    def has_attachments(self) -> bool:
+        """Check if campaign has any attachments"""
+        return self.attachments.get_attachment_count() > 0
+    
+    def clear_attachments(self) -> None:
+        """Remove all attachments"""
+        self.attachments.clear_attachments()
+    
+    def validate_attachments(self) -> List[str]:
+        """
+        Validate all campaign attachments
+        
+        Returns:
+            List of attachment validation errors
+        """
+        return self.attachments.validate_all()
+    
+    def sync_attachments_with_template(self) -> None:
+        """
+        Sync campaign attachments with email template attachments
+        This ensures campaign-level and template-level attachments are consistent
+        """
+        if self.email_template and self.email_template.has_attachments():
+            # Copy template attachments to campaign level
+            for attachment in self.email_template.get_attachments():
+                # Only add if not already present
+                if not self.attachments.has_attachment(attachment.filename):
+                    self.attachments.attachments.append(attachment)
     
     def mark_ready_for_sending(self) -> None:
         """Mark campaign as ready after preview approval"""
@@ -292,6 +361,7 @@ class Campaign:
             'current_screen': self.current_screen,
             'contact_count': len(self.contacts),
             'template': self.email_template.to_dict() if self.email_template else None,
+            'attachments': self.attachments.to_dict(),
             'started_at': self.started_at.isoformat() if self.started_at else None,
             'completed_at': self.completed_at.isoformat() if self.completed_at else None,
             'source_file': self.source_file,
@@ -313,7 +383,9 @@ class Campaign:
             'success_rate': self.get_success_rate(),
             'duration': self.get_campaign_duration(),
             'started_at': self.started_at,
-            'completed_at': self.completed_at
+            'completed_at': self.completed_at,
+            'attachment_count': self.get_attachment_count(),
+            'attachment_summary': self.get_attachment_summary()
         }
     
     def __str__(self) -> str:
