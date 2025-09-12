@@ -1,7 +1,8 @@
 """
-Compose Screen for Mini Email CRM
-Step 2 of 4: Compose Email
-Integrates the EmailEditor widget with from settings and navigation
+Enhanced Compose Screen for Mini Email CRM
+Task 16: Enhanced Compose Screen (Screen 2)
+Two-column layout with settings vs email body, attachment integration,
+contact count display, attachment summary, and validation feedback
 """
 
 import os
@@ -13,36 +14,43 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, 
     QPushButton, QFrame, QGroupBox, QSpacerItem, QSizePolicy,
-    QMessageBox, QListWidget, QListWidgetItem
+    QMessageBox, QListWidget, QListWidgetItem, QScrollArea,
+    QTextEdit
 )
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtCore import Qt, pyqtSignal, QTimer
+from PyQt5.QtGui import QFont, QPalette
 
 from ui.widgets.email_editor import EmailEditor
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUCCESS_BUTTON_STYLE, ERROR_BUTTON_STYLE,
     INPUT_STYLE, CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE,
-    PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, LIGHT_GREY, BORDER_GREY
+    PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, LIGHT_GREY, BORDER_GREY,
+    WARNING_ORANGE, DARK_GREY
 )
 
 
 class ComposeScreen(QWidget):
     """
-    Compose email screen - Step 2 of 4
-    Matches Screen 2 design with EmailEditor integration
+    Enhanced Compose Email Screen - Step 2 of 4
+    Task 16: Two-column layout with attachment integration and enhanced features
     """
     
     # Navigation signals
     back_clicked = pyqtSignal()
-    preview_clicked = pyqtSignal(dict)  # Passes email data
+    preview_clicked = pyqtSignal(dict)  # Passes email data with attachments
     exit_clicked = pyqtSignal()
     
     # Content signals
     email_content_changed = pyqtSignal(dict)
+    attachment_validation_changed = pyqtSignal(bool)  # True if all attachments valid
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self.contact_count = 0
+        self.attachment_errors = []
+        self.validation_timer = QTimer()
+        self.validation_timer.setSingleShot(True)
+        self.validation_timer.timeout.connect(self.validate_attachments_delayed)
         self.setup_ui()
         self.connect_signals()
         
@@ -77,7 +85,7 @@ class ComposeScreen(QWidget):
         self.setLayout(main_layout)
         
     def create_header(self):
-        """Create the header with step indicator and contact count"""
+        """Create the enhanced header with step indicator, contact count, and attachment summary"""
         layout = QHBoxLayout()
         
         # Step indicator
@@ -87,6 +95,23 @@ class ComposeScreen(QWidget):
         
         # Spacer
         layout.addStretch()
+        
+        # Attachment summary (when attachments exist)
+        self.attachment_summary_label = QLabel("")
+        self.attachment_summary_label.setStyleSheet(f"""
+            QLabel {{
+                color: {PRIMARY_BLUE};
+                font-size: 10px;
+                font-weight: bold;
+                padding: 4px 8px;
+                background-color: #E3F2FD;
+                border: 1px solid {PRIMARY_BLUE};
+                border-radius: 4px;
+                margin-right: 8px;
+            }}
+        """)
+        self.attachment_summary_label.setVisible(False)
+        layout.addWidget(self.attachment_summary_label)
         
         # Contact count status
         self.status_label = QLabel("Ready to send to 0 contacts")
@@ -217,16 +242,125 @@ class ComposeScreen(QWidget):
         return group
         
     def create_email_body_section(self):
-        """Create the email body section with just the EmailEditor"""
+        """Create the enhanced email body section with EmailEditor and attachment feedback"""
+        # Main container for email body
+        container = QWidget()
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(8)
+        
         # Create the EmailEditor widget
         self.email_editor = EmailEditor(max_characters=5000)
+        layout.addWidget(self.email_editor)
+        
+        # Attachment validation feedback area
+        self.validation_feedback = self.create_validation_feedback_area()
+        layout.addWidget(self.validation_feedback)
+        
+        # Email body preview with attachment indicators
+        self.preview_area = self.create_preview_area()
+        layout.addWidget(self.preview_area)
         
         # Connect EmailEditor signals
         self.email_editor.text_changed.connect(self.on_email_content_changed)
         self.email_editor.character_count_changed.connect(self.on_character_count_changed)
         self.email_editor.placeholder_inserted.connect(self.on_placeholder_inserted)
+        self.email_editor.attachment_added.connect(self.on_attachment_added)
+        self.email_editor.attachment_removed.connect(self.on_attachment_removed)
+        self.email_editor.attachments_changed.connect(self.on_attachments_changed)
         
-        return self.email_editor
+        container.setLayout(layout)
+        return container
+        
+    def create_validation_feedback_area(self):
+        """Create area for attachment validation feedback"""
+        feedback_area = QFrame()
+        feedback_area.setFrameStyle(QFrame.NoFrame)
+        feedback_area.setStyleSheet("QFrame { background-color: transparent; }")
+        feedback_area.setVisible(False)  # Hidden by default
+        
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(4)
+        
+        # Validation message label
+        self.validation_message = QLabel()
+        self.validation_message.setWordWrap(True)
+        self.validation_message.setStyleSheet(f"""
+            QLabel {{
+                color: {ERROR_RED};
+                font-size: 11px;
+                background-color: #FFEBEE;
+                border: 1px solid {ERROR_RED};
+                border-radius: 4px;
+                padding: 8px;
+                margin: 4px 0px;
+            }}
+        """)
+        layout.addWidget(self.validation_message)
+        
+        feedback_area.setLayout(layout)
+        return feedback_area
+        
+    def create_preview_area(self):
+        """Create collapsible email preview area with attachment indicators"""
+        preview_container = QGroupBox("Email Preview")
+        preview_container.setStyleSheet(f"""
+            QGroupBox {{
+                font-weight: bold;
+                border: 1px solid {BORDER_GREY};
+                border-radius: 4px;
+                margin-top: 8px;
+                padding-top: 12px;
+                background-color: #FAFAFA;
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+                color: {DARK_GREY};
+                background-color: #FAFAFA;
+            }}
+        """)
+        preview_container.setCheckable(True)
+        preview_container.setChecked(False)  # Collapsed by default
+        preview_container.setMaximumHeight(200)
+        
+        layout = QVBoxLayout()
+        layout.setContentsMargins(12, 8, 12, 12)
+        layout.setSpacing(8)
+        
+        # Preview text area (read-only)
+        self.preview_text = QTextEdit()
+        self.preview_text.setReadOnly(True)
+        self.preview_text.setMaximumHeight(120)
+        self.preview_text.setStyleSheet(f"""
+            QTextEdit {{
+                border: 1px solid {BORDER_GREY};
+                border-radius: 4px;
+                background-color: white;
+                font-size: 11px;
+                color: {DARK_GREY};
+            }}
+        """)
+        self.preview_text.setPlaceholderText("Email preview will appear here...")
+        layout.addWidget(self.preview_text)
+        
+        # Attachment indicators
+        self.attachment_indicators = QLabel("📎 No attachments")
+        self.attachment_indicators.setStyleSheet(f"""
+            QLabel {{
+                color: {DARK_GREY};
+                font-size: 10px;
+                padding: 4px 8px;
+                background-color: #F5F5F5;
+                border-radius: 3px;
+            }}
+        """)
+        layout.addWidget(self.attachment_indicators)
+        
+        preview_container.setLayout(layout)
+        return preview_container
         
     def create_navigation(self):
         """Create the navigation buttons"""
@@ -309,18 +443,142 @@ class ComposeScreen(QWidget):
     def on_email_content_changed(self, html_content):
         """Handle email content changes from EmailEditor"""
         self.validate_form()
+        self.update_preview()
         email_data = self.get_email_data()
         self.email_content_changed.emit(email_data)
         
     def on_character_count_changed(self, current, max_count):
         """Handle character count changes"""
-        # Could add additional handling here if needed
-        pass
+        # Update preview when character count changes
+        self.update_preview()
         
     def on_placeholder_inserted(self, placeholder):
         """Handle placeholder insertion"""
-        # Could log or track placeholder usage
-        pass
+        # Update preview when placeholders are inserted
+        self.update_preview()
+        
+    def on_attachment_added(self, filename):
+        """Handle attachment added"""
+        print(f"📎 Attachment added: {filename}")
+        self.update_attachment_summary()
+        self.update_attachment_indicators()
+        self.validate_form()
+        # Trigger validation after a short delay to allow for UI updates
+        self.validation_timer.start(500)
+        
+    def on_attachment_removed(self, filename):
+        """Handle attachment removed"""
+        print(f"📎 Attachment removed: {filename}")
+        self.update_attachment_summary()
+        self.update_attachment_indicators()
+        self.validate_form()
+        self.clear_validation_feedback()
+        
+    def on_attachments_changed(self, count, total_size):
+        """Handle attachment count/size changes"""
+        self.update_attachment_summary()
+        self.update_attachment_indicators()
+        self.validate_form()
+        
+    def update_attachment_summary(self):
+        """Update attachment summary in header"""
+        if self.email_editor.has_attachments():
+            summary = self.email_editor.get_attachment_summary()
+            count = summary['count']
+            size = summary['total_size_formatted']
+            self.attachment_summary_label.setText(f"📎 {count} file{'s' if count != 1 else ''} ({size})")
+            self.attachment_summary_label.setVisible(True)
+        else:
+            self.attachment_summary_label.setVisible(False)
+            
+    def update_attachment_indicators(self):
+        """Update attachment indicators in preview area"""
+        if self.email_editor.has_attachments():
+            summary = self.email_editor.get_attachment_summary()
+            count = summary['count']
+            size = summary['total_size_formatted']
+            types = summary['types']
+            
+            # Create type breakdown
+            type_parts = []
+            if types['pdf'] > 0:
+                type_parts.append(f"{types['pdf']} PDF")
+            if types['image'] > 0:
+                type_parts.append(f"{types['image']} image{'s' if types['image'] != 1 else ''}")
+            if types['document'] > 0:
+                type_parts.append(f"{types['document']} document{'s' if types['document'] != 1 else ''}")
+            if types['other'] > 0:
+                type_parts.append(f"{types['other']} other")
+                
+            type_text = ", ".join(type_parts) if type_parts else "files"
+            self.attachment_indicators.setText(f"📎 {count} attachment{'s' if count != 1 else ''} ({size}) - {type_text}")
+            self.attachment_indicators.setStyleSheet(f"""
+                QLabel {{
+                    color: {PRIMARY_BLUE};
+                    font-size: 10px;
+                    font-weight: bold;
+                    padding: 4px 8px;
+                    background-color: #E3F2FD;
+                    border-radius: 3px;
+                }}
+            """)
+        else:
+            self.attachment_indicators.setText("📎 No attachments")
+            self.attachment_indicators.setStyleSheet(f"""
+                QLabel {{
+                    color: {DARK_GREY};
+                    font-size: 10px;
+                    padding: 4px 8px;
+                    background-color: #F5F5F5;
+                    border-radius: 3px;
+                }}
+            """)
+            
+    def update_preview(self):
+        """Update email preview with current content"""
+        # Get email content
+        from_email = self.from_email_input.text().strip()
+        subject = self.subject_input.text().strip()
+        content = self.email_editor.get_plain_text().strip()
+        
+        # Build preview
+        preview_lines = []
+        if from_email:
+            preview_lines.append(f"From: {from_email}")
+        if subject:
+            preview_lines.append(f"Subject: {subject}")
+        if content:
+            preview_lines.append(f"\n{content[:200]}{'...' if len(content) > 200 else ''}")
+        else:
+            preview_lines.append("\n(No email content)")
+            
+        preview_text = "\n".join(preview_lines)
+        self.preview_text.setPlainText(preview_text)
+        
+    def validate_attachments_delayed(self):
+        """Validate attachments with delay to avoid excessive validation"""
+        self.attachment_errors = self.email_editor.validate_attachments()
+        
+        if self.attachment_errors:
+            self.show_validation_feedback(self.attachment_errors)
+            self.attachment_validation_changed.emit(False)
+        else:
+            self.clear_validation_feedback()
+            self.attachment_validation_changed.emit(True)
+            
+    def show_validation_feedback(self, errors):
+        """Show attachment validation errors"""
+        if errors:
+            error_text = "Attachment Issues:\n• " + "\n• ".join(errors)
+            self.validation_message.setText(error_text)
+            self.validation_feedback.setVisible(True)
+        else:
+            self.clear_validation_feedback()
+            
+    def clear_validation_feedback(self):
+        """Clear validation feedback"""
+        self.validation_feedback.setVisible(False)
+        self.validation_message.setText("")
         
     def insert_placeholder(self, item):
         """Insert a placeholder from the personalization list"""
@@ -337,7 +595,7 @@ class ComposeScreen(QWidget):
         
     # Data and validation methods
     def validate_form(self):
-        """Validate the form and enable/disable preview button"""
+        """Enhanced validation including attachments"""
         from_email = self.from_email_input.text().strip()
         subject = self.subject_input.text().strip()
         email_content = self.email_editor.get_plain_text().strip()
@@ -348,10 +606,36 @@ class ComposeScreen(QWidget):
         has_content = bool(email_content)
         has_contacts = self.contact_count > 0
         
-        # Enable preview button only if all required fields are filled
-        is_valid = has_from_email and has_subject and has_content and has_contacts
+        # Attachment validation
+        attachments_valid = len(self.attachment_errors) == 0
+        
+        # Enable preview button only if all validations pass
+        is_valid = has_from_email and has_subject and has_content and has_contacts and attachments_valid
         self.preview_btn.setEnabled(is_valid)
         
+        # Update button style based on validation state
+        if not attachments_valid and self.email_editor.has_attachments():
+            self.preview_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {WARNING_ORANGE};
+                    color: white;
+                    border: 2px solid {WARNING_ORANGE};
+                    padding: 10px 20px;
+                    border-radius: 4px;
+                    font-weight: bold;
+                    font-size: 12px;
+                    min-width: 100px;
+                    min-height: 36px;
+                }}
+                QPushButton:disabled {{
+                    background-color: {LIGHT_GREY};
+                    color: #999999;
+                    border-color: {BORDER_GREY};
+                }}
+            """)
+        else:
+            self.preview_btn.setStyleSheet(BUTTON_STYLE)
+            
         return is_valid
         
     def validate_email_data(self):
@@ -383,14 +667,18 @@ class ComposeScreen(QWidget):
         return True
         
     def get_email_data(self):
-        """Get all email data as a dictionary"""
+        """Get all email data including attachments as a dictionary"""
         return {
             'from_email': self.from_email_input.text().strip(),
             'subject': self.subject_input.text().strip(),
             'content_html': self.email_editor.get_html_content(),
             'content_plain': self.email_editor.get_plain_text(),
             'character_count': len(self.email_editor.get_plain_text()),
-            'placeholders_used': self.get_placeholders_in_content()
+            'placeholders_used': self.get_placeholders_in_content(),
+            'attachments': self.email_editor.get_attachment_data(),
+            'attachment_count': self.email_editor.get_attachment_count(),
+            'attachment_summary': self.email_editor.get_attachment_summary(),
+            'attachment_errors': self.attachment_errors.copy()
         }
         
     def get_placeholders_in_content(self):
@@ -424,10 +712,15 @@ class ComposeScreen(QWidget):
         self.email_editor.set_content(content, is_html)
         
     def clear_form(self):
-        """Clear all form fields"""
+        """Clear all form fields including attachments"""
         self.from_email_input.clear()
         self.subject_input.clear()
         self.email_editor.clear_content()
+        self.email_editor.clear_attachments()
+        self.clear_validation_feedback()
+        self.update_attachment_summary()
+        self.update_attachment_indicators()
+        self.update_preview()
         
     def load_email_template(self, template_data):
         """Load an email template"""
@@ -435,9 +728,10 @@ class ComposeScreen(QWidget):
             self.set_subject(template_data['subject'])
         if 'content' in template_data:
             self.set_email_content(template_data['content'], template_data.get('is_html', False))
+        # Note: Templates don't include attachments for security reasons
             
     def get_form_data(self):
-        """Get all form data for external use"""
+        """Get all form data for external use including attachments"""
         return self.get_email_data()
         
     def set_enabled(self, enabled):
@@ -446,9 +740,37 @@ class ComposeScreen(QWidget):
         self.from_email_input.setEnabled(enabled)
         self.subject_input.setEnabled(enabled)
         self.email_editor.set_enabled(enabled)
+        
+    # New attachment-related public methods
+    def get_attachment_summary(self):
+        """Get attachment summary for external use"""
+        return self.email_editor.get_attachment_summary()
+        
+    def has_attachments(self):
+        """Check if email has attachments"""
+        return self.email_editor.has_attachments()
+        
+    def get_attachments(self):
+        """Get all attachments"""
+        return self.email_editor.get_attachments()
+        
+    def validate_all_attachments(self):
+        """Validate all attachments and return errors"""
+        return self.email_editor.validate_attachments()
+        
+    def clear_attachments(self):
+        """Clear all attachments"""
+        self.email_editor.clear_attachments()
+        self.clear_validation_feedback()
+        self.update_attachment_summary()
+        self.update_attachment_indicators()
+        
+    def get_validation_errors(self):
+        """Get current validation errors"""
+        return self.attachment_errors.copy()
 
 
-# Test the screen directly
+# Test the enhanced screen directly
 if __name__ == '__main__':
     import sys
     from PyQt5.QtWidgets import QApplication
@@ -456,17 +778,36 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     
     screen = ComposeScreen()
-    screen.setWindowTitle("Compose Screen Test")
-    screen.resize(900, 700)
+    screen.setWindowTitle("Enhanced Compose Screen Test - Task 16")
+    screen.resize(1200, 800)  # Larger for better layout testing
     
-    # Connect the exit signal to actually close the window in test mode
+    # Set test data
+    screen.set_contact_count(25)
+    screen.set_from_email("test@minicrm.com")
+    
+    # Connect signals for testing
     screen.exit_clicked.connect(screen.close)
+    screen.attachment_validation_changed.connect(
+        lambda valid: print(f"📎 Attachment validation: {'✅ Valid' if valid else '❌ Invalid'}")
+    )
     
     screen.show()
     
-    print("✅ Compose screen launched successfully!")
-    print("✅ Global styling applied!")
-    print("✅ EmailEditor integrated!")
-    print("✅ Exit button properly connected!")
+    print("✅ Enhanced Compose Screen launched successfully!")
+    print("🆕 Task 16 Features:")
+    print("✅ Two-column layout (settings vs email body)")
+    print("✅ From Email and Subject inputs")
+    print("✅ Enhanced email editor with attachments")
+    print("✅ Contact count in header")
+    print("✅ Attachment summary display")
+    print("✅ Attachment file size validation feedback")
+    print("✅ Email body preview with attachment indicators")
+    print("✅ Back/Preview/Exit buttons")
+    print("\n📋 Test Features:")
+    print("• Drag and drop files to attach")
+    print("• Watch attachment summary in header")
+    print("• Check validation feedback for large files")
+    print("• Toggle email preview to see attachment indicators")
+    print("• Fill form and watch preview button enable")
     
     sys.exit(app.exec_())
