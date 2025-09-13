@@ -770,44 +770,33 @@ class ComposeScreen(QWidget):
         return self.attachment_errors.copy()
 
 
-# Test the enhanced screen directly
+# For development: run screen without test data
 if __name__ == '__main__':
     import sys
     from PyQt5.QtWidgets import QApplication
     
+    print("📧 ComposeScreen - Enhanced Compose Screen for Mini Email CRM")
+    print("🚀 Starting clean compose screen (no test data)")
+    print("💡 For full testing with sample data, run: python demos/demo_enhanced_compose_screen.py")
+    print("📝 For automated tests, run: python tests/test_compose_screen.py")
+    print()
+    
     app = QApplication(sys.argv)
     
+    # Create clean screen
     screen = ComposeScreen()
-    screen.setWindowTitle("Enhanced Compose Screen Test - Task 16")
-    screen.resize(1200, 800)  # Larger for better layout testing
+    screen.setWindowTitle("Enhanced Compose Screen - Clean View")
+    screen.resize(1200, 800)
     
-    # Set test data
-    screen.set_contact_count(25)
-    screen.set_from_email("test@minicrm.com")
+    # Connect basic signals
+    screen.exit_clicked.connect(app.quit)
     
-    # Connect signals for testing
-    screen.exit_clicked.connect(screen.close)
-    screen.attachment_validation_changed.connect(
-        lambda valid: print(f"📎 Attachment validation: {'✅ Valid' if valid else '❌ Invalid'}")
-    )
+    # Show instructions
+    print("📖 Instructions:")
+    print("• This is the clean compose screen without test data")
+    print("• Use the demo file to see it with sample data")
+    print("• You can type in the fields to test the UI")
+    print("• The screen shows the complete layout and styling")
     
     screen.show()
-    
-    print("✅ Enhanced Compose Screen launched successfully!")
-    print("🆕 Task 16 Features:")
-    print("✅ Two-column layout (settings vs email body)")
-    print("✅ From Email and Subject inputs")
-    print("✅ Enhanced email editor with attachments")
-    print("✅ Contact count in header")
-    print("✅ Attachment summary display")
-    print("✅ Attachment file size validation feedback")
-    print("✅ Email body preview with attachment indicators")
-    print("✅ Back/Preview/Exit buttons")
-    print("\n📋 Test Features:")
-    print("• Drag and drop files to attach")
-    print("• Watch attachment summary in header")
-    print("• Check validation feedback for large files")
-    print("• Toggle email preview to see attachment indicators")
-    print("• Fill form and watch preview button enable")
-    
     sys.exit(app.exec_())
