@@ -785,7 +785,7 @@ if __name__ == '__main__':
     
     # Create clean screen
     screen = ComposeScreen()
-    screen.setWindowTitle("Enhanced Compose Screen - Clean View")
+    screen.setWindowTitle("Step 2 - Compose")
     screen.resize(1200, 800)
     
     # Connect basic signals

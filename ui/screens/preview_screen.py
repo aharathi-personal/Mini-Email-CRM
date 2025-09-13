@@ -867,7 +867,7 @@ if __name__ == '__main__':
     
     # Create clean screen
     screen = PreviewScreen()
-    screen.setWindowTitle("Enhanced Preview Screen - Clean View")
+    screen.setWindowTitle("Step 3 - Preview")
     screen.resize(1200, 800)
     
     # Connect basic signals

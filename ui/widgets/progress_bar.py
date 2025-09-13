@@ -87,7 +87,7 @@ class ProgressDisplayWidget(QWidget):
         layout.setSpacing(5)
         
         # Title
-        self.title_label = QLabel("Step 4 of 4: Sending Emails")
+        self.title_label = QLabel("Step 4 - Progress")
         self.title_label.setStyleSheet(TITLE_STYLE)
         layout.addWidget(self.title_label)
         

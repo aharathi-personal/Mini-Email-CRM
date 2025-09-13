@@ -147,7 +147,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     
     screen = UploadScreen()
-    screen.setWindowTitle("Upload Screen Test")
+    screen.setWindowTitle("Step 1 - Upload CSV")
     screen.resize(600, 500)
     
     # Connect signals for testing
