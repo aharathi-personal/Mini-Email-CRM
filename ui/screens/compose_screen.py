@@ -64,15 +64,17 @@ class ComposeScreen(QWidget):
         header_layout = self.create_header()
         main_layout.addLayout(header_layout)
         
-        # Main content area
+        # Main content area with better proportions
         content_layout = QHBoxLayout()
-        content_layout.setSpacing(15)
+        content_layout.setSpacing(20)
         
-        # Left side - From settings and Personalization help (stacked)
+        # Left side - From settings and Personalization help (more space)
         left_panel = self.create_left_panel()
+        left_panel.setMinimumWidth(320)  # Ensure minimum width for labels
+        left_panel.setMaximumWidth(400)   # Limit maximum width
         content_layout.addWidget(left_panel, 1)
         
-        # Right side - Email body (EmailEditor only)
+        # Right side - Email body (less relative space but still flexible)
         email_body_section = self.create_email_body_section()
         content_layout.addWidget(email_body_section, 2)
         
@@ -139,35 +141,95 @@ class ComposeScreen(QWidget):
         return panel
         
     def create_from_settings(self):
-        """Create the compact From settings section"""
+        """Create the compact From settings section with consistent card design"""
         group = QGroupBox("From settings")
-        group.setStyleSheet(CARD_STYLE)
+        group.setStyleSheet(f"""
+            QGroupBox {{
+                font-weight: bold;
+                border: 1px solid {BORDER_GREY};
+                border-radius: 4px;
+                margin-top: 8px;
+                padding-top: 12px;
+                background-color: #FAFAFA;
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+                color: {DARK_GREY};
+                background-color: #FAFAFA;
+            }}
+        """)
         
         layout = QVBoxLayout()
         layout.setContentsMargins(15, 15, 15, 20)
         layout.setSpacing(15)
         
-        # From Email field
+        # From Email field with better sizing
         from_email_label = QLabel("From Email")
-        from_email_label.setStyleSheet(SUBTITLE_STYLE)
+        from_email_label.setStyleSheet(f"""
+            QLabel {{
+                font-weight: bold;
+                color: {DARK_GREY};
+                font-size: 12px;
+                margin-bottom: 5px;
+            }}
+        """)
+        from_email_label.setWordWrap(True)
+        from_email_label.setMinimumHeight(25)
         layout.addWidget(from_email_label)
         
         self.from_email_input = QLineEdit()
         self.from_email_input.setPlaceholderText("your-email@example.com")
-        self.from_email_input.setStyleSheet(INPUT_STYLE)
+        self.from_email_input.setStyleSheet(f"""
+            QLineEdit {{
+                border: 1px solid {BORDER_GREY};
+                border-radius: 4px;
+                padding: 8px 12px;
+                font-size: 12px;
+                background-color: white;
+                min-height: 20px;
+            }}
+            QLineEdit:focus {{
+                border-color: {PRIMARY_BLUE};
+                outline: none;
+            }}
+        """)
         layout.addWidget(self.from_email_input)
         
         # Spacer between fields
         layout.addSpacing(10)
         
-        # Email subject field
+        # Email subject field with better sizing
         subject_label = QLabel("Email subject")
-        subject_label.setStyleSheet(SUBTITLE_STYLE)
+        subject_label.setStyleSheet(f"""
+            QLabel {{
+                font-weight: bold;
+                color: {DARK_GREY};
+                font-size: 12px;
+                margin-bottom: 5px;
+            }}
+        """)
+        subject_label.setWordWrap(True)
+        subject_label.setMinimumHeight(25)
         layout.addWidget(subject_label)
         
         self.subject_input = QLineEdit()
         self.subject_input.setPlaceholderText("Enter your email subject...")
-        self.subject_input.setStyleSheet(INPUT_STYLE)
+        self.subject_input.setStyleSheet(f"""
+            QLineEdit {{
+                border: 1px solid {BORDER_GREY};
+                border-radius: 4px;
+                padding: 8px 12px;
+                font-size: 12px;
+                background-color: white;
+                min-height: 20px;
+            }}
+            QLineEdit:focus {{
+                border-color: {PRIMARY_BLUE};
+                outline: none;
+            }}
+        """)
         layout.addWidget(self.subject_input)
         
         # Add some bottom spacing
@@ -177,17 +239,40 @@ class ComposeScreen(QWidget):
         return group
         
     def create_personalization_help(self):
-        """Create the expanded personalization help section"""
+        """Create the expanded personalization help section with consistent card design"""
         group = QGroupBox("Personalization help")
-        group.setStyleSheet(CARD_STYLE)
+        group.setStyleSheet(f"""
+            QGroupBox {{
+                font-weight: bold;
+                border: 1px solid {BORDER_GREY};
+                border-radius: 4px;
+                margin-top: 8px;
+                padding-top: 12px;
+                background-color: #FAFAFA;
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+                color: {DARK_GREY};
+                background-color: #FAFAFA;
+            }}
+        """)
         
         layout = QVBoxLayout()
         layout.setContentsMargins(15, 15, 15, 20)
         layout.setSpacing(12)
         
-        # Available placeholders label
+        # Available placeholders label with better styling
         placeholders_label = QLabel("Available placeholders:")
-        placeholders_label.setStyleSheet(SUBTITLE_STYLE)
+        placeholders_label.setStyleSheet(f"""
+            QLabel {{
+                font-weight: bold;
+                color: {DARK_GREY};
+                font-size: 12px;
+                margin-bottom: 5px;
+            }}
+        """)
         layout.addWidget(placeholders_label)
         
         # Create expanded placeholder list
@@ -243,11 +328,29 @@ class ComposeScreen(QWidget):
         
     def create_email_body_section(self):
         """Create the enhanced email body section with EmailEditor and attachment feedback"""
-        # Main container for email body
-        container = QWidget()
+        # Main container as a card
+        group = QGroupBox("Email body")
+        group.setStyleSheet(f"""
+            QGroupBox {{
+                font-weight: bold;
+                border: 1px solid {BORDER_GREY};
+                border-radius: 4px;
+                margin-top: 8px;
+                padding-top: 12px;
+                background-color: #FAFAFA;
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+                color: {DARK_GREY};
+                background-color: #FAFAFA;
+            }}
+        """)
+        
         layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        layout.setContentsMargins(15, 15, 15, 20)
+        layout.setSpacing(12)
         
         # Create the EmailEditor widget
         self.email_editor = EmailEditor(max_characters=5000)
@@ -269,8 +372,8 @@ class ComposeScreen(QWidget):
         self.email_editor.attachment_removed.connect(self.on_attachment_removed)
         self.email_editor.attachments_changed.connect(self.on_attachments_changed)
         
-        container.setLayout(layout)
-        return container
+        group.setLayout(layout)
+        return group
         
     def create_validation_feedback_area(self):
         """Create area for attachment validation feedback"""
@@ -304,8 +407,8 @@ class ComposeScreen(QWidget):
         
     def create_preview_area(self):
         """Create collapsible email preview area with attachment indicators"""
-        preview_container = QGroupBox("Email Preview")
-        preview_container.setStyleSheet(f"""
+        self.preview_container = QGroupBox("Email Preview")
+        self.preview_container.setStyleSheet(f"""
             QGroupBox {{
                 font-weight: bold;
                 border: 1px solid {BORDER_GREY};
@@ -322,9 +425,12 @@ class ComposeScreen(QWidget):
                 background-color: #FAFAFA;
             }}
         """)
-        preview_container.setCheckable(True)
-        preview_container.setChecked(False)  # Collapsed by default
-        preview_container.setMaximumHeight(200)
+        self.preview_container.setCheckable(True)
+        self.preview_container.setChecked(False)  # Collapsed by default
+        self.preview_container.setMaximumHeight(200)
+        
+        # Connect checkbox toggle to preview updates
+        self.preview_container.toggled.connect(self.on_preview_toggled)
         
         layout = QVBoxLayout()
         layout.setContentsMargins(12, 8, 12, 12)
@@ -359,8 +465,8 @@ class ComposeScreen(QWidget):
         """)
         layout.addWidget(self.attachment_indicators)
         
-        preview_container.setLayout(layout)
-        return preview_container
+        self.preview_container.setLayout(layout)
+        return self.preview_container
         
     def create_navigation(self):
         """Create the navigation buttons"""
@@ -443,19 +549,23 @@ class ComposeScreen(QWidget):
     def on_email_content_changed(self, html_content):
         """Handle email content changes from EmailEditor"""
         self.validate_form()
-        self.update_preview()
+        # Only update preview if checkbox is checked
+        if hasattr(self, 'preview_container') and self.preview_container.isChecked():
+            self.update_preview()
         email_data = self.get_email_data()
         self.email_content_changed.emit(email_data)
         
     def on_character_count_changed(self, current, max_count):
         """Handle character count changes"""
-        # Update preview when character count changes
-        self.update_preview()
+        # Only update preview if checkbox is checked
+        if hasattr(self, 'preview_container') and self.preview_container.isChecked():
+            self.update_preview()
         
     def on_placeholder_inserted(self, placeholder):
         """Handle placeholder insertion"""
-        # Update preview when placeholders are inserted
-        self.update_preview()
+        # Only update preview if checkbox is checked
+        if hasattr(self, 'preview_container') and self.preview_container.isChecked():
+            self.update_preview()
         
     def on_attachment_added(self, filename):
         """Handle attachment added"""
@@ -535,7 +645,11 @@ class ComposeScreen(QWidget):
             """)
             
     def update_preview(self):
-        """Update email preview with current content"""
+        """Update email preview with current content - only if preview is enabled"""
+        # Only update preview if the checkbox is checked
+        if not hasattr(self, 'preview_container') or not self.preview_container.isChecked():
+            return
+            
         # Get email content
         from_email = self.from_email_input.text().strip()
         subject = self.subject_input.text().strip()
@@ -554,6 +668,15 @@ class ComposeScreen(QWidget):
             
         preview_text = "\n".join(preview_lines)
         self.preview_text.setPlainText(preview_text)
+        
+    def on_preview_toggled(self, checked):
+        """Handle preview checkbox toggle"""
+        if checked:
+            # When checkbox is checked, update the preview immediately
+            self.update_preview()
+        else:
+            # When unchecked, clear the preview
+            self.preview_text.clear()
         
     def validate_attachments_delayed(self):
         """Validate attachments with delay to avoid excessive validation"""
@@ -720,7 +843,9 @@ class ComposeScreen(QWidget):
         self.clear_validation_feedback()
         self.update_attachment_summary()
         self.update_attachment_indicators()
-        self.update_preview()
+        # Only update preview if checkbox is checked
+        if hasattr(self, 'preview_container') and self.preview_container.isChecked():
+            self.update_preview()
         
     def load_email_template(self, template_data):
         """Load an email template"""
