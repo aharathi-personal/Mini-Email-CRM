@@ -1219,16 +1219,35 @@ class ProgressScreen(QWidget):
             print(f"📧 Original body: {raw_body[:100]}...")
             print(f"🎯 Personalized body: {personalized_body[:100]}...")
             
+            # Convert attachment dicts to Attachment objects
+            attachment_objects = []
+            if self.attachments:
+                print(f"🔧 Converting {len(self.attachments)} attachment dicts to Attachment objects")
+                from models.attachment import Attachment
+                
+                for att_dict in self.attachments:
+                    try:
+                        # Use filepath from the dict to create Attachment object
+                        filepath = att_dict.get('filepath', '')
+                        if filepath and os.path.exists(filepath):
+                            attachment_obj = Attachment.from_file_path(filepath)
+                            attachment_objects.append(attachment_obj)
+                            print(f"✅ Converted attachment: {attachment_obj.filename}")
+                        else:
+                            print(f"❌ Invalid filepath for attachment: {att_dict.get('filename', 'unknown')}")
+                    except Exception as e:
+                        print(f"❌ Failed to convert attachment {att_dict.get('filename', 'unknown')}: {e}")
+                
+                print(f"📎 Successfully converted {len(attachment_objects)} attachments")
+            
             # Send the email using the correct method with personalized content
-            # Note: For now, send without attachments to avoid conversion issues
-            # TODO: Convert attachment dicts to Attachment objects properly
             result = self.email_service.send_single_email(
                 contact=contact_obj,
                 subject=personalized_subject,  # Use personalized content
                 body=personalized_body,        # Use personalized content
                 sender_email=self.campaign_data.get('from_email', ''),
                 is_html=True,
-                attachments=None  # Skip attachments for now to fix the main sending issue
+                attachments=attachment_objects  # Use converted Attachment objects
             )
             
             print(f"📬 Email result: {result.status}, attempts: {result.attempts}")
