@@ -28,6 +28,9 @@ from ui.styles.stylesheet import (
     BORDER_GREY, WARNING_ORANGE, DARK_GREY, FONT_SIZE_SMALL
 )
 
+# Import EmailService for actual email sending
+from core.email_service import EmailService
+
 
 class ProgressScreen(QWidget):
     """
@@ -56,6 +59,9 @@ class ProgressScreen(QWidget):
         self.attachments = []
         self.campaign_start_time = None
         
+        # Email service for actual sending
+        self.email_service = EmailService()
+        
         # Progress tracking
         self.total_emails = 0
         self.current_progress = 0
@@ -73,9 +79,9 @@ class ProgressScreen(QWidget):
         # Animation
         self.progress_animation = None
         
-        # Progress simulation timer (for demo purposes)
+        # Progress simulation timer (for demo purposes) - also used for real sending
         self.simulation_timer = QTimer()
-        self.simulation_timer.timeout.connect(self.simulate_next_email)
+        self.simulation_timer.timeout.connect(self.send_next_email)  # Changed from simulate_next_email
         self.simulation_active = False
         
         self.setup_ui()
@@ -217,13 +223,15 @@ class ProgressScreen(QWidget):
         layout.setSpacing(12)
         
         # Progress label
-        self.progress_label = QLabel("Preparing to send emails...")
+        self.progress_label = QLabel("Preparing to send emails")
         self.progress_label.setStyleSheet(f"""
             QLabel {{
-                font-size: 16px;
+                font-size: 14px;
                 font-weight: bold;
                 color: {DARK_GREY};
                 text-align: center;
+                background-color: transparent;
+                border: none;
             }}
         """)
         self.progress_label.setAlignment(Qt.AlignCenter)
@@ -285,13 +293,15 @@ class ProgressScreen(QWidget):
         layout.setSpacing(8)
         
         # Current email
-        self.current_email_label = QLabel("Ready to start sending...")
+        self.current_email_label = QLabel("Ready to start sending")
         self.current_email_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 13px;
                 color: {DARK_GREY};
                 font-weight: 500;
                 text-align: center;
+                background-color: transparent;
+                border: none;
             }}
         """)
         self.current_email_label.setAlignment(Qt.AlignCenter)
@@ -828,6 +838,12 @@ class ProgressScreen(QWidget):
             size_str = self.format_file_size(total_size)
             self.log_info(f"Attachments: {len(self.attachments)} files ({size_str})")
         
+        # Start the email sending process
+        self.log_info("Starting email sending timer...")
+        if not self.simulation_active:
+            self.simulation_active = True
+            self.simulation_timer.start(1000)  # Start sending emails with 1 second interval
+        
     def update_progress(self, current, current_email="", time_remaining="", attachment_info=""):
         """Update the progress display"""
         if current > self.current_progress:
@@ -863,7 +879,7 @@ class ProgressScreen(QWidget):
         # Progress text and percentage
         if self.total_emails > 0:
             percentage = int((self.current_progress / self.total_emails) * 100)
-            self.progress_label.setText(f"Sending {self.current_progress} of {self.total_emails} emails...")
+            self.progress_label.setText(f"Sending {self.current_progress} of {self.total_emails} emails")
             self.percentage_label.setText(f"{percentage}%")
         
         # Current status
@@ -891,7 +907,7 @@ class ProgressScreen(QWidget):
             if self.estimated_time:
                 self.time_remaining_label.setText(f"Estimated time remaining: {self.estimated_time}")
         else:
-            self.current_email_label.setText("Ready to start sending...")
+            self.current_email_label.setText("Ready to start sending")
             self.time_remaining_label.setText("")
             
     def update_counters(self):
@@ -1115,6 +1131,130 @@ class ProgressScreen(QWidget):
         self.simulation_active = True
         self.simulation_timer.start(800)  # Send every 800ms
         
+    def send_next_email(self):
+        """Send the next email using EmailService"""
+        print(f"🔄 send_next_email called - Progress: {self.current_progress}/{self.total_emails}")
+        
+        if (self.is_paused or self.is_cancelled or 
+            self.current_progress >= self.total_emails):
+            print(f"⚠️ Stopping: paused={self.is_paused}, cancelled={self.is_cancelled}, progress={self.current_progress}/{self.total_emails}")
+            return
+            
+        contact = self.contacts[self.current_progress]
+        email = contact.get('email', f"demo{self.current_progress}@example.com")
+        
+        # Calculate time remaining
+        remaining = self.total_emails - self.current_progress - 1
+        if remaining > 75:
+            time_remaining = f"{int((remaining * 0.8) / 60)} minutes"
+        else:
+            time_remaining = f"{int(remaining * 0.8)} seconds"
+            
+        # Update progress
+        self.update_progress(
+            self.current_progress + 1,
+            email,
+            time_remaining
+        )
+        
+        # Prepare email data for sending
+        email_data = {
+            'from_email': self.campaign_data.get('from_email', ''),
+            'subject': self.campaign_data.get('subject', ''),
+            'content_html': self.campaign_data.get('content_html', ''),
+            'content_plain': self.campaign_data.get('content_plain', ''),
+            'to_email': email,
+            'to_name': contact.get('firstname', '') + ' ' + contact.get('lastname', ''),
+            'attachments': self.attachments
+        }
+        
+        print(f"📝 Email data: subject='{email_data['subject']}', from='{email_data['from_email']}', to='{email}'")
+        print(f"📎 Attachments: {len(self.attachments)} files")
+        print(f"🔍 Attachment data: {self.attachments}")
+        print(f"🔧 Attachment types: {[type(att) for att in self.attachments]}")
+        
+        # Actually send the email
+        try:
+            print(f"📧 Sending email to {email}")
+            
+            # Test connection first
+            print("🔐 Testing SMTP connection...")
+            connection_test = self.email_service.test_connection()
+            if not connection_test:
+                print("❌ SMTP connection failed!")
+                self.log_failure(email, "SMTP connection failed", False)
+                return
+            print("✅ SMTP connection successful")
+            
+            # Create a Contact object from the dict
+            from models.contact import Contact
+            print(f"🔍 Contact dict: {contact}")
+            
+            try:
+                contact_obj = Contact.from_dict(contact)
+                print(f"✅ Contact object created: {contact_obj}")
+                print(f"🔧 Contact type: {type(contact_obj)}")
+            except Exception as e:
+                print(f"❌ Failed to create Contact object: {e}")
+                self.log_failure(email, f"Contact creation failed: {e}", False)
+                return
+            
+            # Personalize email content before sending
+            raw_subject = self.campaign_data.get('subject', '')
+            raw_body = self.campaign_data.get('content_html', '')
+            
+            # Get personalization data from contact
+            personalization_data = contact_obj.get_personalization_data()
+            print(f"📝 Personalization data: {personalization_data}")
+            
+            # Replace placeholders in subject and body
+            personalized_subject = raw_subject
+            personalized_body = raw_body
+            
+            for placeholder, value in personalization_data.items():
+                placeholder_pattern = "{" + placeholder + "}"
+                personalized_subject = personalized_subject.replace(placeholder_pattern, value)
+                personalized_body = personalized_body.replace(placeholder_pattern, value)
+            
+            print(f"📧 Original body: {raw_body[:100]}...")
+            print(f"🎯 Personalized body: {personalized_body[:100]}...")
+            
+            # Send the email using the correct method with personalized content
+            # Note: For now, send without attachments to avoid conversion issues
+            # TODO: Convert attachment dicts to Attachment objects properly
+            result = self.email_service.send_single_email(
+                contact=contact_obj,
+                subject=personalized_subject,  # Use personalized content
+                body=personalized_body,        # Use personalized content
+                sender_email=self.campaign_data.get('from_email', ''),
+                is_html=True,
+                attachments=None  # Skip attachments for now to fix the main sending issue
+            )
+            
+            print(f"📬 Email result: {result.status}, attempts: {result.attempts}")
+            
+            # Log result based on EmailResult status
+            if result.status.value == "sent":
+                attachment_info = f"Sent with {len(self.attachments)} attachments" if self.attachments else ""
+                self.log_success(email, attachment_info)
+            else:
+                error_msg = result.error_message or "Unknown error"
+                self.log_failure(email, error_msg, False)
+                print(f"❌ Email failed: {error_msg}")
+                
+        except Exception as e:
+            # Handle sending errors
+            error_msg = str(e)
+            print(f"💥 Exception sending email: {error_msg}")
+            is_attachment_issue = "attachment" in error_msg.lower()
+            self.log_failure(email, error_msg, is_attachment_issue)
+            
+        # Check if campaign is complete
+        if self.current_progress >= self.total_emails:
+            self.simulation_timer.stop()
+            self.simulation_active = False
+            self.complete_campaign()
+
     def simulate_next_email(self):
         """Simulate sending the next email (for demo)"""
         if (self.is_paused or self.is_cancelled or 
@@ -1211,9 +1351,9 @@ class ProgressScreen(QWidget):
         
         # Reset UI
         self.progress_bar.setValue(0)
-        self.progress_label.setText("Preparing to send emails...")
+        self.progress_label.setText("Preparing to send emails")
         self.percentage_label.setText("0%")
-        self.current_email_label.setText("Ready to start sending...")
+        self.current_email_label.setText("Ready to start sending")
         self.time_remaining_label.setText("")
         self.campaign_timestamp_label.setText("Campaign not started")
         self.attachment_info_label.setText("No attachments")

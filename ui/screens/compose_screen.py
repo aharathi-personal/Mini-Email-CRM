@@ -821,6 +821,21 @@ class ComposeScreen(QWidget):
         self.contact_count = count
         self.status_label.setText(f"Ready to send to {count} contacts")
         self.validate_form()  # Re-validate with new contact count
+    
+    def set_contact_data(self, upload_data):
+        """Set contact data from upload screen"""
+        if 'contact_count' in upload_data:
+            self.set_contact_count(upload_data['contact_count'])
+        
+        # Store the upload data for later use
+        self.upload_data = upload_data
+        
+        # Update UI to reflect data received
+        if hasattr(self, 'status_label') and self.contact_count > 0:
+            self.status_label.setText(f"Ready to send to {self.contact_count} contacts")
+        
+        # Trigger validation to enable Preview button if conditions are met
+        self.validate_form()
         
     def set_from_email(self, email):
         """Set the from email address"""

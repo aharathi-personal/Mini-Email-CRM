@@ -696,7 +696,14 @@ class PreviewScreen(QWidget):
             return
             
         # Update summary
-        total_size = sum(att.get('file_size', 0) for att in self.attachments)
+        total_size = 0
+        for att in self.attachments:
+            if isinstance(att, dict):
+                total_size += att.get('file_size', 0)
+            else:
+                # Handle Attachment object
+                total_size += getattr(att, 'file_size', 0)
+                
         count = len(self.attachments)
         
         if total_size < 1024 * 1024:
@@ -718,9 +725,17 @@ class PreviewScreen(QWidget):
         
         # Add attachments to list
         for attachment in self.attachments:
-            filename = attachment.get('filename', 'Unknown file')
-            file_size = attachment.get('file_size_formatted', 'Unknown size')
-            att_type = attachment.get('attachment_type', 'other')
+            if isinstance(attachment, dict):
+                filename = attachment.get('filename', 'Unknown file')
+                file_size = attachment.get('file_size_formatted', 'Unknown size')
+                att_type = attachment.get('attachment_type', 'other')
+            else:
+                # Handle Attachment object
+                filename = getattr(attachment, 'filename', 'Unknown file')
+                file_size = getattr(attachment, 'get_file_size_formatted', lambda: 'Unknown size')()
+                att_type = getattr(attachment, 'attachment_type', 'other')
+                if hasattr(att_type, 'value'):
+                    att_type = att_type.value
             
             # Choose icon based on type
             if att_type == 'pdf':
@@ -773,6 +788,57 @@ class PreviewScreen(QWidget):
         return True
         
     # Public interface methods
+    def set_campaign_data(self, campaign_data):
+        """Set complete campaign data from previous screens"""
+        print(f"🔍 Preview Screen - Received campaign data: {list(campaign_data.keys())}")
+        
+        # Extract and set email data
+        email_data = {}
+        if 'from_email' in campaign_data:
+            email_data['from_email'] = campaign_data['from_email']
+        if 'subject' in campaign_data:
+            email_data['subject'] = campaign_data['subject']
+        if 'content_plain' in campaign_data:
+            email_data['content_plain'] = campaign_data['content_plain']
+        if 'content_html' in campaign_data:
+            email_data['content_html'] = campaign_data['content_html']
+        if 'attachments' in campaign_data:
+            email_data['attachments'] = campaign_data['attachments']
+        
+        self.set_email_data(email_data)
+        
+        # Load contacts from CSV file if available
+        if 'file_path' in campaign_data or 'uploaded_file' in campaign_data:
+            file_path = campaign_data.get('file_path') or campaign_data.get('uploaded_file')
+            if file_path and os.path.exists(file_path):
+                contacts = self.load_contacts_from_csv(file_path)
+                self.set_contacts(contacts)
+                print(f"✅ Loaded {len(contacts)} contacts from {file_path}")
+            else:
+                print(f"❌ Contact file not found: {file_path}")
+        
+        # Store complete campaign data
+        self.campaign_data = campaign_data
+        
+        # Update preview if we have contacts
+        if self.contacts:
+            self.update_email_preview(self.contacts[0])
+    
+    def load_contacts_from_csv(self, file_path):
+        """Load contacts from CSV file"""
+        contacts = []
+        try:
+            import csv
+            with open(file_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    contact = Contact.from_dict(row)
+                    contacts.append(contact)
+        except Exception as e:
+            print(f"Error loading contacts: {e}")
+            
+        return contacts
+    
     def set_contacts(self, contacts):
         """Set the contact list"""
         self.contacts = contacts
@@ -795,8 +861,17 @@ class PreviewScreen(QWidget):
         """Set the email data"""
         self.email_data = email_data
         
-        # Extract attachments if present
-        self.attachments = email_data.get('attachments', [])
+        # Extract attachments - handle both list and dict formats
+        attachments_data = email_data.get('attachments', [])
+        if isinstance(attachments_data, dict):
+            # Handle AttachmentManager.to_dict() format: {'attachments': [...], 'summary': '...'}
+            self.attachments = attachments_data.get('attachments', [])
+        elif isinstance(attachments_data, list):
+            # Handle direct list of attachments
+            self.attachments = attachments_data
+        else:
+            self.attachments = []
+            
         self.attachment_errors = email_data.get('attachment_errors', [])
         
         # Update displays
@@ -812,15 +887,45 @@ class PreviewScreen(QWidget):
         self.send_all_btn.setEnabled(bool(self.contacts and email_data))
         
     def get_final_email_data(self):
-        """Get final email data for sending"""
-        return {
-            'email_data': self.email_data,
-            'contacts': self.contacts,
-            'total_emails': len(self.contacts),
+        """Get final email data for sending - flattened format for Progress screen"""
+        # Convert Contact objects to dictionaries for Progress screen compatibility
+        contacts_dict = []
+        for contact in self.contacts:
+            if hasattr(contact, 'to_dict'):
+                # Contact object - convert to dict
+                contacts_dict.append(contact.to_dict())
+            else:
+                # Already a dict - use as is
+                contacts_dict.append(contact)
+        
+        # Flatten the data structure to match Progress screen expectations
+        final_data = {
+            # Direct campaign data that Progress screen expects
+            'contacts': contacts_dict,  # Progress screen expects dicts, not Contact objects
             'attachments': self.attachments,
             'attachment_errors': self.attachment_errors,
-            'has_validation_issues': bool(self.attachment_errors)
+            'total_emails': len(self.contacts),
+            'has_validation_issues': bool(self.attachment_errors),
+            
+            # Email template data (flatten email_data)
+            'from_email': self.email_data.get('from_email', ''),
+            'subject': self.email_data.get('subject', ''),
+            'content_html': self.email_data.get('content_html', ''),
+            'content_plain': self.email_data.get('content_plain', ''),
+            
+            # Additional campaign metadata
+            'campaign_ready': True,
+            'preview_completed': True,
         }
+        
+        # Include complete campaign data if available from previous screens
+        if hasattr(self, 'campaign_data') and self.campaign_data:
+            # Merge with existing campaign data, but override with current values
+            merged_data = self.campaign_data.copy()
+            merged_data.update(final_data)
+            return merged_data
+        
+        return final_data
         
     def clear_data(self):
         """Clear all data"""

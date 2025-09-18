@@ -284,8 +284,8 @@ class MainWindow(QMainWindow):
             # Preview Screen signals
             if hasattr(self.preview_screen, 'back_clicked'):
                 self.preview_screen.back_clicked.connect(self.show_compose_screen)
-            if hasattr(self.preview_screen, 'send_clicked'):
-                self.preview_screen.send_clicked.connect(self.on_preview_send)
+            if hasattr(self.preview_screen, 'send_all_clicked'):
+                self.preview_screen.send_all_clicked.connect(self.on_preview_send)
             if hasattr(self.preview_screen, 'exit_clicked'):
                 self.preview_screen.exit_clicked.connect(self.close_application)
                 
