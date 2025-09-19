@@ -299,7 +299,7 @@ class EmailEditor(QWidget):
         self.text_change_timer.start(300)  # 300ms delay
         
     def create_attachment_section(self):
-        """Create the attachment section below the email body - Gmail style"""
+        """Create the attachment section below the email body - Gmail style with scrolling"""
         section = QFrame()
         section.setFrameStyle(QFrame.NoFrame)
         section.setStyleSheet("""
@@ -315,14 +315,49 @@ class EmailEditor(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(4)
         
-        # Simple container for attachment items (no scroll, no complex header)
+        # Create a scrollable area for attachments to prevent UI overflow
+        self.attachment_scroll = QScrollArea()
+        self.attachment_scroll.setWidgetResizable(True)
+        self.attachment_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.attachment_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.attachment_scroll.setMaximumHeight(120)  # Limit height to ~4 attachment items
+        self.attachment_scroll.setMinimumHeight(0)    # Allow shrinking when no attachments
+        self.attachment_scroll.setVisible(False)      # Hidden by default
+        self.attachment_scroll.setStyleSheet("""
+            QScrollArea {
+                background-color: transparent;
+                border: none;
+                margin: 0px;
+                padding: 0px;
+            }
+            QScrollBar:vertical {
+                background-color: #F8F9FA;
+                width: 8px;
+                border-radius: 4px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #DADCE0;
+                border-radius: 4px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #BBBDBF;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+        """)
+        
+        # Container widget for attachment items
         self.attachment_container = QWidget()
         self.attachment_layout = QVBoxLayout()
         self.attachment_layout.setContentsMargins(0, 0, 0, 0)
         self.attachment_layout.setSpacing(4)
+        self.attachment_layout.addStretch()  # Push items to top
         
         self.attachment_container.setLayout(self.attachment_layout)
-        layout.addWidget(self.attachment_container)
+        self.attachment_scroll.setWidget(self.attachment_container)
+        layout.addWidget(self.attachment_scroll)
         
         section.setLayout(layout)
         self.update_attachment_display()
@@ -332,25 +367,62 @@ class EmailEditor(QWidget):
         """Set up drag and drop functionality"""
         self.setAcceptDrops(True)
         self.attachment_section.setAcceptDrops(True)
+        if hasattr(self, 'attachment_scroll'):
+            self.attachment_scroll.setAcceptDrops(True)
         
     def dragEnterEvent(self, event: QDragEnterEvent):
         """Handle drag enter event"""
         if event.mimeData().hasUrls():
             event.acceptProposedAction()
-            # Simple visual feedback - just highlight the attachment section
-            self.attachment_container.setStyleSheet("""
-                QWidget {
-                    background-color: #F0F8FF;
-                    border: 1px dashed #2196F3;
-                    border-radius: 4px;
-                }
-            """)
+            # Simple visual feedback - highlight the scroll area or container
+            if hasattr(self, 'attachment_scroll') and self.attachment_scroll.isVisible():
+                self.attachment_scroll.setStyleSheet("""
+                    QScrollArea {
+                        background-color: #F0F8FF;
+                        border: 1px dashed #2196F3;
+                        border-radius: 4px;
+                    }
+                """ + self.attachment_scroll.styleSheet().split('QScrollArea {')[0] if 'QScrollArea {' in self.attachment_scroll.styleSheet() else "")
+            else:
+                self.attachment_container.setStyleSheet("""
+                    QWidget {
+                        background-color: #F0F8FF;
+                        border: 1px dashed #2196F3;
+                        border-radius: 4px;
+                    }
+                """)
         else:
             event.ignore()
             
     def dragLeaveEvent(self, event):
         """Handle drag leave event"""
         # Reset to normal style
+        if hasattr(self, 'attachment_scroll'):
+            # Reset scroll area style to original
+            self.attachment_scroll.setStyleSheet("""
+                QScrollArea {
+                    background-color: transparent;
+                    border: none;
+                    margin: 0px;
+                    padding: 0px;
+                }
+                QScrollBar:vertical {
+                    background-color: #F8F9FA;
+                    width: 8px;
+                    border-radius: 4px;
+                }
+                QScrollBar::handle:vertical {
+                    background-color: #DADCE0;
+                    border-radius: 4px;
+                    min-height: 20px;
+                }
+                QScrollBar::handle:vertical:hover {
+                    background-color: #BBBDBF;
+                }
+                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                    height: 0px;
+                }
+            """)
         self.attachment_container.setStyleSheet("")
         
     def dropEvent(self, event: QDropEvent):
@@ -412,18 +484,31 @@ class EmailEditor(QWidget):
         self.attachments_changed.emit(count, total_size)
         
     def update_attachment_display(self):
-        """Update the attachment display area - Gmail style"""
-        # Clear existing items
-        while self.attachment_layout.count() > 0:
+        """Update the attachment display area - Gmail style with scrolling"""
+        # Clear existing items (except the stretch)
+        while self.attachment_layout.count() > 1:  # Keep the stretch at the end
             child = self.attachment_layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
                 
-        # Add attachment items (no header, no complex display)
+        # Add attachment items
         attachments = self.attachment_manager.get_attachments()
-        for attachment in attachments:
-            item_widget = self.create_attachment_item(attachment)
-            self.attachment_layout.addWidget(item_widget)
+        
+        # Show/hide scroll area based on whether we have attachments
+        if attachments:
+            self.attachment_scroll.setVisible(True)
+            # Calculate dynamic height based on attachment count (max 4 items visible)
+            item_height = 32  # Approximate height of each attachment item
+            max_visible_items = 4
+            needed_height = min(len(attachments) * item_height, max_visible_items * item_height)
+            self.attachment_scroll.setMaximumHeight(max(needed_height, 50))  # Minimum 50px
+            
+            for attachment in attachments:
+                item_widget = self.create_attachment_item(attachment)
+                # Insert before the stretch
+                self.attachment_layout.insertWidget(self.attachment_layout.count() - 1, item_widget)
+        else:
+            self.attachment_scroll.setVisible(False)
             
     def create_attachment_item(self, attachment: Attachment):
         """Create a simple attachment item - Gmail style (no icon, compact)"""
