@@ -102,7 +102,7 @@ class PreviewScreen(QWidget):
         self.setLayout(main_layout)
         
     def create_header(self):
-        """Create the header with step indicator and status"""
+        """Create the enhanced header with step indicator and contact status - matching compose screen"""
         layout = QHBoxLayout()
         
         # Step indicator
@@ -113,7 +113,7 @@ class PreviewScreen(QWidget):
         # Spacer
         layout.addStretch()
         
-        # Contact status (will be updated dynamically)
+        # Contact status (enhanced styling to match compose screen)
         self.contact_status_label = QLabel("0 contacts ready")
         self.contact_status_label.setStyleSheet(SUBTITLE_STYLE)
         layout.addWidget(self.contact_status_label)
@@ -121,46 +121,80 @@ class PreviewScreen(QWidget):
         return layout
         
     def create_contact_list_panel(self):
-        """Create the left panel with contact list and search"""
+        """Create the left panel with contact list and search - matching compose screen styling"""
         panel = QGroupBox("Contacts")
-        panel.setStyleSheet(CARD_STYLE)
+        panel.setStyleSheet(f"""
+            QGroupBox {{
+                font-weight: 600;
+                font-size: 13px;
+                border: 1px solid {BORDER_GREY};
+                border-radius: 6px;
+                margin-top: 10px;
+                padding-top: 16px;
+                background-color: white;
+                color: {DARK_GREY};
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 8px 0 8px;
+                color: {DARK_GREY};
+                background-color: white;
+                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
+            }}
+        """)
         
         layout = QVBoxLayout()
-        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setContentsMargins(16, 12, 16, 16)
         layout.setSpacing(12)
         
         # Search section
         search_layout = self.create_search_section()
         layout.addLayout(search_layout)
         
-        # Contact count
+        # Contact count (enhanced styling)
         self.contact_count_label = QLabel("0 contacts")
-        self.contact_count_label.setStyleSheet(SUBTITLE_STYLE)
+        self.contact_count_label.setStyleSheet(f"""
+            QLabel {{
+                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
+                font-size: 12px;
+                font-weight: 500;
+                color: #5F6368;
+                margin-bottom: 4px;
+            }}
+        """)
         layout.addWidget(self.contact_count_label)
         
-        # Contact list
+        # Contact list (enhanced styling matching compose screen aesthetics)
         self.contact_list = QListWidget()
         self.contact_list.setStyleSheet(f"""
             QListWidget {{
                 border: 1px solid {BORDER_GREY};
-                border-radius: 4px;
+                border-radius: 6px;
                 background-color: white;
                 selection-background-color: {PRIMARY_BLUE};
                 selection-color: white;
-                font-size: 11px;
+                font-size: 12px;
+                font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
                 min-height: 300px;
+                outline: none;
             }}
             QListWidget::item {{
-                padding: 10px;
-                border-bottom: 1px solid #F0F0F0;
+                padding: 12px 16px;
+                border-bottom: 1px solid #F0F2F5;
                 color: {DARK_GREY};
+                margin: 0px;
+            }}
+            QListWidget::item:last {{
+                border-bottom: none;
             }}
             QListWidget::item:hover {{
-                background-color: #E3F2FD;
+                background-color: #F8F9FA;
             }}
             QListWidget::item:selected {{
                 background-color: {PRIMARY_BLUE};
                 color: white;
+                border-bottom: 1px solid {PRIMARY_BLUE};
             }}
         """)
         
@@ -177,19 +211,45 @@ class PreviewScreen(QWidget):
         return panel
         
     def create_search_section(self):
-        """Create the search functionality"""
+        """Create the search functionality - enhanced styling matching compose screen"""
         layout = QVBoxLayout()
-        layout.setSpacing(8)
+        layout.setSpacing(10)
         
-        # Search label
+        # Search label (enhanced styling)
         search_label = QLabel("Search contacts:")
-        search_label.setStyleSheet(SUBTITLE_STYLE)
+        search_label.setStyleSheet(f"""
+            QLabel {{
+                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
+                font-size: 13px;
+                font-weight: 600;
+                color: {DARK_GREY};
+                margin-bottom: 2px;
+            }}
+        """)
         layout.addWidget(search_label)
         
-        # Search input
+        # Search input (enhanced styling)
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Search by name or email...")
-        self.search_input.setStyleSheet(INPUT_STYLE)
+        self.search_input.setStyleSheet(f"""
+            QLineEdit {{
+                border: 1px solid {BORDER_GREY};
+                border-radius: 6px;
+                padding: 10px 12px;
+                font-size: 12px;
+                font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
+                background-color: white;
+                color: {DARK_GREY};
+                selection-background-color: {PRIMARY_BLUE};
+            }}
+            QLineEdit:focus {{
+                border-color: {PRIMARY_BLUE};
+                background-color: #FAFBFC;
+            }}
+            QLineEdit::placeholder {{
+                color: #9AA0A6;
+            }}
+        """)
         self.search_input.textChanged.connect(self.on_search_text_changed)
         layout.addWidget(self.search_input)
         
@@ -200,60 +260,73 @@ class PreviewScreen(QWidget):
         layout = QHBoxLayout()
         layout.setSpacing(8)
         
-        # Previous contact
+        # Previous contact (enhanced styling)
         self.prev_contact_btn = QPushButton("◀ Previous")
         self.prev_contact_btn.clicked.connect(self.select_previous_contact)
         self.prev_contact_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: {LIGHT_GREY};
+                background-color: #F8F9FA;
                 color: {DARK_GREY};
                 border: 1px solid {BORDER_GREY};
-                padding: 6px 12px;
-                border-radius: 4px;
-                font-size: 10px;
-                min-width: 60px;
+                padding: 8px 14px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
+                font-weight: 500;
+                min-width: 70px;
             }}
             QPushButton:hover {{
                 background-color: #EEEEEE;
+                border-color: #CCCCCC;
             }}
             QPushButton:disabled {{
-                color: #999999;
-                background-color: #F9F9F9;
+                color: #9AA0A6;
+                background-color: #F5F6F7;
+                border-color: #E8E9EA;
             }}
         """)
         layout.addWidget(self.prev_contact_btn)
         
-        # Contact position indicator
+        # Contact position indicator (enhanced styling)
         self.position_label = QLabel("1 of 0")
         self.position_label.setStyleSheet(f"""
             QLabel {{
-                color: {DARK_GREY};
-                font-size: 10px;
-                padding: 6px;
+                color: #5F6368;
+                font-size: 11px;
+                font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
+                font-weight: 500;
+                padding: 8px 12px;
                 text-align: center;
+                background-color: #F8F9FA;
+                border-radius: 6px;
+                min-width: 50px;
             }}
         """)
         layout.addWidget(self.position_label)
         
-        # Next contact
+        # Next contact (enhanced styling)
         self.next_contact_btn = QPushButton("Next ▶")
         self.next_contact_btn.clicked.connect(self.select_next_contact)
         self.next_contact_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: {LIGHT_GREY};
+                background-color: #F8F9FA;
                 color: {DARK_GREY};
                 border: 1px solid {BORDER_GREY};
-                padding: 6px 12px;
-                border-radius: 4px;
-                font-size: 10px;
-                min-width: 60px;
+                padding: 8px 14px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
+                font-weight: 500;
+                min-width: 70px;
             }}
             QPushButton:hover {{
                 background-color: #EEEEEE;
+                border-color: #CCCCCC;
             }}
             QPushButton:disabled {{
-                color: #999999;
-                background-color: #F9F9F9;
+                color: #9AA0A6;
+                background-color: #F5F6F7;
+                border-color: #E8E9EA;
             }}
         """)
         layout.addWidget(self.next_contact_btn)
@@ -261,12 +334,31 @@ class PreviewScreen(QWidget):
         return layout
         
     def create_email_preview_panel(self):
-        """Create the right panel with email preview"""
+        """Create the right panel with email preview - matching compose screen styling"""
         panel = QGroupBox("Email Preview")
-        panel.setStyleSheet(CARD_STYLE)
+        panel.setStyleSheet(f"""
+            QGroupBox {{
+                font-weight: 600;
+                font-size: 13px;
+                border: 1px solid {BORDER_GREY};
+                border-radius: 6px;
+                margin-top: 10px;
+                padding-top: 16px;
+                background-color: white;
+                color: {DARK_GREY};
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 8px 0 8px;
+                color: {DARK_GREY};
+                background-color: white;
+                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
+            }}
+        """)
         
         layout = QVBoxLayout()
-        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setContentsMargins(16, 12, 16, 16)
         layout.setSpacing(15)
         
         # Email headers section
@@ -289,30 +381,32 @@ class PreviewScreen(QWidget):
         return panel
         
     def create_email_headers_section(self):
-        """Create the email headers display"""
+        """Create the email headers display - enhanced styling to match compose screen"""
         section = QFrame()
-        section.setFrameStyle(QFrame.Box)
+        section.setFrameStyle(QFrame.NoFrame)
         section.setStyleSheet(f"""
             QFrame {{
-                background-color: #FAFAFA;
+                background-color: #F8F9FA;
                 border: 1px solid {BORDER_GREY};
-                border-radius: 4px;
-                padding: 12px;
+                border-radius: 6px;
+                padding: 16px;
+                margin-bottom: 8px;
             }}
         """)
         
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(8)
+        layout.setSpacing(10)
         
-        # To field
+        # To field (enhanced styling)
         self.to_label = QLabel("To: (No contact selected)")
         self.to_label.setStyleSheet(f"""
             QLabel {{
-                font-family: monospace;
-                font-size: 11px;
+                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
+                font-size: 12px;
                 color: {DARK_GREY};
-                font-weight: bold;
+                font-weight: 600;
+                padding: 2px 0px;
             }}
         """)
         layout.addWidget(self.to_label)
@@ -321,9 +415,10 @@ class PreviewScreen(QWidget):
         self.from_label = QLabel("From: (Not set)")
         self.from_label.setStyleSheet(f"""
             QLabel {{
-                font-family: monospace;
-                font-size: 11px;
-                color: {DARK_GREY};
+                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
+                font-size: 12px;
+                color: #5F6368;
+                padding: 2px 0px;
             }}
         """)
         layout.addWidget(self.from_label)
@@ -332,9 +427,10 @@ class PreviewScreen(QWidget):
         self.subject_label = QLabel("Subject: (Not set)")
         self.subject_label.setStyleSheet(f"""
             QLabel {{
-                font-family: monospace;
-                font-size: 11px;
-                color: {DARK_GREY};
+                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
+                font-size: 12px;
+                color: #5F6368;
+                padding: 2px 0px;
             }}
         """)
         layout.addWidget(self.subject_label)
@@ -343,91 +439,150 @@ class PreviewScreen(QWidget):
         return section
         
     def create_email_content_section(self):
-        """Create the email content preview"""
+        """Create the email content preview - matching attachments widget container pattern"""
         section = QGroupBox("Email Content")
         section.setStyleSheet(f"""
             QGroupBox {{
-                font-weight: bold;
+                font-weight: 600;
+                font-size: 13px;
                 border: 1px solid {BORDER_GREY};
-                border-radius: 4px;
-                margin-top: 8px;
-                padding-top: 12px;
+                border-radius: 6px;
+                margin-top: 10px;
+                padding-top: 16px;
                 background-color: white;
+                color: {DARK_GREY};
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
+                left: 12px;
+                padding: 0 8px 0 8px;
                 color: {DARK_GREY};
                 background-color: white;
+                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
             }}
         """)
         
         layout = QVBoxLayout()
-        layout.setContentsMargins(12, 8, 12, 12)
-        layout.setSpacing(8)
+        layout.setContentsMargins(16, 12, 16, 16)
+        layout.setSpacing(12)
         
-        # Content preview area
+        # Create scrollable container for content preview (like attachments widget)
+        content_scroll_area = QScrollArea()
+        content_scroll_area.setWidgetResizable(True)
+        content_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        content_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        content_scroll_area.setFrameStyle(QFrame.NoFrame)
+        content_scroll_area.setStyleSheet(f"""
+            QScrollArea {{
+                background-color: #F0F2F5;
+                border: 1px solid #E1E3E1;
+                border-radius: 8px;
+                margin: 4px;
+            }}
+            QScrollBar:vertical {{
+                background-color: #F8F9FA;
+                width: 8px;
+                border-radius: 4px;
+                margin: 0px;
+            }}
+            QScrollBar::handle:vertical {{
+                background-color: #DADCE0;
+                border-radius: 4px;
+                min-height: 20px;
+            }}
+            QScrollBar::handle:vertical:hover {{
+                background-color: #BBBDBF;
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                height: 0px;
+            }}
+        """)
+        
+        # Content widget inside scroll area
+        content_widget = QWidget()
+        content_widget.setStyleSheet("QWidget { background-color: transparent; }")
+        
+        content_widget_layout = QVBoxLayout()
+        content_widget_layout.setContentsMargins(16, 16, 16, 16)
+        content_widget_layout.setSpacing(0)
+        
+        # Content preview area (properly contained and scrollable)
         self.content_preview = QTextEdit()
         self.content_preview.setReadOnly(True)
-        self.content_preview.setMinimumHeight(200)
-        self.content_preview.setMaximumHeight(300)
+        self.content_preview.setMinimumHeight(120)
+        # Remove maximum height to allow flexible sizing
         self.content_preview.setStyleSheet(f"""
             QTextEdit {{
                 border: 1px solid {BORDER_GREY};
-                border-radius: 4px;
+                border-radius: 6px;
                 background-color: white;
-                font-size: 11px;
+                font-size: 12px;
+                font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
                 color: {DARK_GREY};
-                padding: 8px;
+                padding: 12px;
+                line-height: 1.4;
+            }}
+            QTextEdit:focus {{
+                border-color: {PRIMARY_BLUE};
+                background-color: white;
             }}
         """)
         self.content_preview.setPlaceholderText("Email content will appear here when a contact is selected...")
-        layout.addWidget(self.content_preview)
+        
+        content_widget_layout.addWidget(self.content_preview)
+        content_widget.setLayout(content_widget_layout)
+        content_scroll_area.setWidget(content_widget)
+        layout.addWidget(content_scroll_area)
         
         section.setLayout(layout)
         return section
         
     def create_attachments_section(self):
-        """Create the attachments display section"""
+        """Create the attachments display section - enhanced styling matching compose screen"""
         section = QGroupBox("Attachments")
         section.setStyleSheet(f"""
             QGroupBox {{
-                font-weight: bold;
+                font-weight: 600;
+                font-size: 13px;
                 border: 1px solid {BORDER_GREY};
-                border-radius: 4px;
-                margin-top: 8px;
-                padding-top: 12px;
-                background-color: #E3F2FD;
+                border-radius: 6px;
+                margin-top: 10px;
+                padding-top: 16px;
+                background-color: #F8F9FA;
+                color: {DARK_GREY};
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
+                left: 12px;
+                padding: 0 8px 0 8px;
                 color: {DARK_GREY};
-                background-color: #E3F2FD;
+                background-color: #F8F9FA;
+                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
             }}
         """)
         
         layout = QVBoxLayout()
-        layout.setContentsMargins(12, 8, 12, 12)
-        layout.setSpacing(8)
+        layout.setContentsMargins(16, 12, 16, 16)
+        layout.setSpacing(12)
         
-        # Attachment summary
+        # Attachment summary (enhanced styling)
         self.attachment_summary = QLabel("📎 No attachments")
         self.attachment_summary.setStyleSheet(f"""
             QLabel {{
-                color: {DARK_GREY};
-                font-size: 11px;
-                font-weight: bold;
-                padding: 8px;
-                background-color: white;
-                border-radius: 4px;
+                color: {PRIMARY_BLUE};
+                font-size: 12px;
+                font-weight: 600;
+                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
+                padding: 10px 12px;
+                background-color: #E3F2FD;
+                border: 1px solid {PRIMARY_BLUE};
+                border-radius: 6px;
+                margin-bottom: 4px;
             }}
         """)
         layout.addWidget(self.attachment_summary)
         
-        # Attachment list
+        # Attachment list (enhanced styling)
         self.attachment_list = QListWidget()
         self.attachment_list.setMaximumHeight(120)
         self.attachment_list.setStyleSheet(f"""
@@ -477,17 +632,17 @@ class PreviewScreen(QWidget):
         return self.warnings_section
         
     def create_navigation(self):
-        """Create the navigation buttons"""
+        """Create the navigation buttons - matching compose screen styling"""
         layout = QHBoxLayout()
         layout.setSpacing(15)
         
-        # Previous button
+        # Previous button (matching compose screen Back button styling)
         previous_btn = QPushButton("Previous")
         previous_btn.clicked.connect(self.on_previous_clicked)
         previous_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {LIGHT_GREY};
-                color: {DARK_GREY};
+                color: #333333;
                 border: 2px solid {BORDER_GREY};
                 padding: 10px 20px;
                 border-radius: 4px;
@@ -509,10 +664,10 @@ class PreviewScreen(QWidget):
         # Spacer
         layout.addStretch()
         
-        # Send All button (primary)
+        # Send All button (primary - using BUTTON_STYLE like compose screen Preview button)
         self.send_all_btn = QPushButton("Send All Emails")
         self.send_all_btn.clicked.connect(self.on_send_all_clicked)
-        self.send_all_btn.setStyleSheet(SUCCESS_BUTTON_STYLE)
+        self.send_all_btn.setStyleSheet(BUTTON_STYLE)
         self.send_all_btn.setEnabled(False)  # Disabled until data is loaded
         layout.addWidget(self.send_all_btn)
         
