@@ -2,6 +2,9 @@
 Enhanced Preview Screen for Mini Email CRM
 Task 17: Enhanced Preview Screen (Screen 3)
 Contact list with search, email preview with headers, attachment validation warnings
+
+Prompt: Can you scan the entire codebase and summarize the color scheme and UI design being using for dark mode and light mode.
+
 """
 
 import os
@@ -22,6 +25,11 @@ from PyQt5.QtGui import QFont, QPalette
 from core.template_engine import TemplateEngine
 from models.contact import Contact
 from models.attachment import Attachment, AttachmentType
+
+# Import new theme system
+from ui.base.themed_widgets import ThemedWidget, get_current_theme_colors, apply_button_style
+
+# Import legacy styles for backward compatibility during transition
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUCCESS_BUTTON_STYLE, ERROR_BUTTON_STYLE,
     INPUT_STYLE, CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE, BODY_STYLE,
@@ -30,10 +38,11 @@ from ui.styles.stylesheet import (
 )
 
 
-class PreviewScreen(QWidget):
+class PreviewScreen(ThemedWidget):
     """
     Enhanced Preview Screen - Step 3 of 4
     Task 17: Contact list and email preview with search and attachment validation
+    Now inherits from ThemedWidget for automatic theme support
     """
     
     # Navigation signals
@@ -65,6 +74,58 @@ class PreviewScreen(QWidget):
         
         self.setup_ui()
         self.connect_signals()
+    
+    def get_widget_stylesheet(self) -> str:
+        """Override to provide custom stylesheet for preview screen"""
+        # Use the full dynamic stylesheet
+        return self.stylesheet_generator.generate_stylesheet()
+    
+    def apply_theme_customizations(self):
+        """Apply custom theme-specific changes beyond stylesheets"""
+        theme = self.get_current_theme()
+        
+        # Update button styles using the theme system
+        if hasattr(self, 'previous_button'):
+            apply_button_style(self.previous_button, "primary")
+        
+        if hasattr(self, 'send_all_button'):
+            apply_button_style(self.send_all_button, "success")
+        
+        if hasattr(self, 'exit_button'):
+            apply_button_style(self.exit_button, "error")
+        
+        # Update contact navigation buttons
+        if hasattr(self, 'prev_contact_btn'):
+            self._update_navigation_button_style(self.prev_contact_btn)
+        
+        if hasattr(self, 'next_contact_btn'):
+            self._update_navigation_button_style(self.next_contact_btn)
+    
+    def _update_navigation_button_style(self, button):
+        """Update navigation button style with current theme"""
+        theme = self.get_current_theme()
+        button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {theme['surface_container']};
+                color: {theme['text_primary']};
+                border: 1px solid {theme['border']};
+                padding: 8px 14px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-family: Arial, Helvetica, sans-serif;
+                font-weight: 500;
+                min-width: 70px;
+            }}
+            QPushButton:hover {{
+                background-color: {theme['hover_overlay']};
+                border-color: {theme['primary']};
+            }}
+            QPushButton:disabled {{
+                color: {theme['text_disabled']};
+                background-color: {theme['disabled_background']};
+                border-color: {theme['disabled']};
+            }}
+        """)
         
     def setup_ui(self):
         """Set up the preview screen UI"""

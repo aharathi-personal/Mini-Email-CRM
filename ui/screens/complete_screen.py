@@ -19,6 +19,10 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QPropertyAnimation, QEasingCurve, QTimer
 from PyQt5.QtGui import QFont, QPixmap, QPainter, QPen, QBrush, QIcon, QColor
 
+# Import theme manager for dynamic styling
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from core.theme_manager import ThemeManager
+
 
 class CompleteScreen(QWidget):
     """Enhanced complete screen with responsive design and campaign statistics"""
@@ -31,6 +35,12 @@ class CompleteScreen(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # Initialize theme manager using singleton instance
+        self.theme_manager = ThemeManager.instance()
+        if self.theme_manager is None:
+            # Fallback: create a new instance if singleton failed
+            self.theme_manager = ThemeManager()
         
         # Data storage
         self.completion_stats = {}
@@ -45,6 +55,9 @@ class CompleteScreen(QWidget):
         
     def setup_ui(self):
         """Set up the complete screen UI to match the exact design"""
+        # Get theme colors for consistent styling throughout the UI
+        theme_colors = self.theme_manager.get_theme()
+        
         # Create scroll area for responsive design
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -67,25 +80,25 @@ class CompleteScreen(QWidget):
         
         # "Campaign Complete!" title
         self.completion_title = QLabel("Campaign Complete!")
-        self.completion_title.setStyleSheet("""
-            QLabel {
+        self.completion_title.setStyleSheet(f"""
+            QLabel {{
                 font-size: 32px;
                 font-weight: bold;
-                color: #333333;
+                color: {theme_colors['text_primary']};
                 margin: 20px 0px;
-            }
+            }}
         """)
         self.completion_title.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.completion_title)
         
         # Campaign summary 
         self.campaign_summary = QLabel("Your email campaign has been completed successfully")
-        self.campaign_summary.setStyleSheet("""
-            QLabel {
+        self.campaign_summary.setStyleSheet(f"""
+            QLabel {{
                 font-size: 16px;
-                color: #666666;
+                color: {theme_colors['text_secondary']};
                 margin: 10px 0px;
-            }
+            }}
         """)
         self.campaign_summary.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.campaign_summary)
@@ -96,14 +109,14 @@ class CompleteScreen(QWidget):
         
         # Duration display
         self.duration_label = QLabel("5 minutes")
-        self.duration_label.setStyleSheet("""
-            QLabel {
+        self.duration_label.setStyleSheet(f"""
+            QLabel {{
                 font-size: 18px;
-                color: #666666;
+                color: {theme_colors['text_secondary']};
                 font-weight: 500;
                 margin: 12px 0px;
                 padding: 2px 6px;
-            }
+            }}
         """)
         self.duration_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.duration_label)
@@ -258,44 +271,47 @@ class CompleteScreen(QWidget):
         layout.setAlignment(Qt.AlignCenter)
         layout.setContentsMargins(40, 20, 40, 20)
         
+        # Get theme colors for dynamic styling
+        theme_colors = self.theme_manager.get_theme()
+        
         # Total emails - large centered text
         self.total_display = QLabel("100 total emails attempted")
-        self.total_display.setStyleSheet("""
-            QLabel {
+        self.total_display.setStyleSheet(f"""
+            QLabel {{
                 font-size: 22px;
-                color: #222222;
+                color: {theme_colors['text_primary']};
                 font-weight: 600;
                 margin: 8px 0px;
                 padding: 2px 6px;
-            }
+            }}
         """)
         self.total_display.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.total_display)
         
         # Successfully sent - green text
         self.success_display = QLabel("85 successfully sent")
-        self.success_display.setStyleSheet("""
-            QLabel {
+        self.success_display.setStyleSheet(f"""
+            QLabel {{
                 font-size: 22px;
-                color: #2f9e44;
+                color: {theme_colors['success']};
                 font-weight: 700;
                 margin: 8px 0px;
                 padding: 2px 6px;
-            }
+            }}
         """)
         self.success_display.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.success_display)
         
         # Failed - red text
         self.failed_display = QLabel("15 failed")
-        self.failed_display.setStyleSheet("""
-            QLabel {
+        self.failed_display.setStyleSheet(f"""
+            QLabel {{
                 font-size: 22px;
-                color: #c92a2a;
+                color: {theme_colors['error']};
                 font-weight: 700;
                 margin: 8px 0px;
                 padding: 2px 6px;
-            }
+            }}
         """)
         self.failed_display.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.failed_display)

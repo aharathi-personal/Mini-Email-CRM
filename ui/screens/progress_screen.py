@@ -31,6 +31,9 @@ from ui.styles.stylesheet import (
 # Import EmailService for actual email sending
 from core.email_service import EmailService
 
+# Import theme manager for dynamic styling  
+from core.theme_manager import ThemeManager
+
 
 class ProgressScreen(QWidget):
     """
@@ -52,6 +55,12 @@ class ProgressScreen(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # Initialize theme manager using singleton instance
+        self.theme_manager = ThemeManager.instance()
+        if self.theme_manager is None:
+            # Fallback: create a new instance if singleton failed
+            self.theme_manager = ThemeManager()
         
         # Campaign data
         self.campaign_data = {}
@@ -242,19 +251,22 @@ class ProgressScreen(QWidget):
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
+        
+        # Get theme colors for dynamic styling
+        theme_colors = self.theme_manager.get_theme()
         self.progress_bar.setStyleSheet(f"""
             QProgressBar {{
-                border: 2px solid {BORDER_GREY};
+                border: 2px solid {theme_colors['border']};
                 border-radius: 8px;
-                background-color: {LIGHT_GREY};
+                background-color: {theme_colors['surface']};
                 text-align: center;
                 font-weight: bold;
                 font-size: {FONT_SIZE_SMALL};
-                color: {DARK_GREY};
+                color: {theme_colors['text_primary']};
                 height: 28px;
             }}
             QProgressBar::chunk {{
-                background-color: {PRIMARY_BLUE};
+                background-color: {theme_colors['primary']};
                 border-radius: 6px;
                 margin: 1px;
             }}
@@ -266,7 +278,7 @@ class ProgressScreen(QWidget):
         self.percentage_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 12px;
-                color: {DARK_GREY};
+                color: {theme_colors['text_primary']};
                 text-align: center;
                 font-weight: bold;
             }}

@@ -91,6 +91,13 @@ class MiniEmailCRMApplication:
     def setup_application_style(self):
         """Configure application-wide styling and theme"""
         try:
+            # Initialize theme system first
+            from core.theme_manager import ThemeManager
+            from ui.styles.dynamic_stylesheet import DynamicStylesheetGenerator
+            
+            theme_manager = ThemeManager.instance()
+            stylesheet_generator = DynamicStylesheetGenerator(theme_manager)
+            
             # Set application font
             font = QFont("Arial", 10)
             font.setStyleHint(QFont.SansSerif)
@@ -100,7 +107,20 @@ class MiniEmailCRMApplication:
             self.app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
             self.app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
             
-            # Set application style sheet for consistent theming
+            # Apply dynamic theme-based stylesheet
+            dynamic_stylesheet = stylesheet_generator.generate_stylesheet()
+            self.app.setStyleSheet(dynamic_stylesheet)
+            
+            self.logger.info(f"Dynamic theme system initialized. Current theme: {theme_manager.get_current_theme_name()}")
+            
+        except Exception as e:
+            self.logger.warning(f"Could not initialize theme system, falling back to basic styling: {e}")
+            # Fallback to basic styling if theme system fails
+            self._setup_fallback_style()
+    
+    def _setup_fallback_style(self):
+        """Fallback styling if theme system fails"""
+        try:
             style_sheet = """
                 QApplication {
                     font-family: Arial, Helvetica, sans-serif;
@@ -137,7 +157,10 @@ class MiniEmailCRMApplication:
             """
             
             self.app.setStyleSheet(style_sheet)
-            self.logger.info("Application styling configured")
+            self.logger.info("Fallback styling applied")
+            
+        except Exception as e:
+            self.logger.warning(f"Could not set fallback style: {e}")
             
         except Exception as e:
             self.logger.warning(f"Could not set application style: {e}")

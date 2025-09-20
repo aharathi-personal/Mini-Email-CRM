@@ -3,6 +3,7 @@ Enhanced Compose Screen for Mini Email CRM
 Task 16: Enhanced Compose Screen (Screen 2)
 Two-column layout with settings vs email body, attachment integration,
 contact count display, attachment summary, and validation feedback
+With enhanced text visibility and theme-aware styling
 """
 
 import os
@@ -21,6 +22,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from PyQt5.QtGui import QFont, QPalette
 
 from ui.widgets.email_editor import EmailEditor
+from ui.base.themed_widgets import ThemedWidget
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUCCESS_BUTTON_STYLE, ERROR_BUTTON_STYLE,
     INPUT_STYLE, CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE,
@@ -29,10 +31,11 @@ from ui.styles.stylesheet import (
 )
 
 
-class ComposeScreen(QWidget):
+class ComposeScreen(ThemedWidget):
     """
     Enhanced Compose Email Screen - Step 2 of 4
     Task 16: Two-column layout with attachment integration and enhanced features
+    With enhanced text visibility and theme-aware styling
     """
     
     # Navigation signals
@@ -49,10 +52,115 @@ class ComposeScreen(QWidget):
         self.contact_count = 0
         self.attachment_errors = []
         self.validation_timer = QTimer()
-        self.validation_timer.setSingleShot(True)
-        self.validation_timer.timeout.connect(self.validate_attachments_delayed)
+        
+        # Store references to themed components for updating
+        self.themed_labels = []
+        self.themed_buttons = []
+        
+        # Initialize UI
+        self.setup_ui()
+        self.setup_validation()
+    
+    def apply_theme_customizations(self):
+        """Apply theme-specific customizations for enhanced text visibility"""
+        if not self.theme_manager:
+            return
+        
+        # Update all themed labels with optimal visibility
+        for label_info in self.themed_labels:
+            label, label_type = label_info
+            if hasattr(label, 'isVisible') and label.isVisible():
+                self._apply_label_theme(label, label_type)
+        
+        # Update all themed buttons
+        for button_info in self.themed_buttons:
+            button, button_type = button_info
+            if hasattr(button, 'isVisible') and button.isVisible():
+                self._apply_button_theme(button, button_type)
+        
+        # Update specific components with enhanced styling
+        self._update_step_indicator()
+        self._update_status_labels()
+        self._update_input_fields()
+        
+    def _update_step_indicator(self):
+        """Update step indicator with enhanced visibility"""
+        if hasattr(self, 'step_label') and self.text_helper:
+            style = self.text_helper.get_label_style('title')
+            self.step_label.setStyleSheet(f"QLabel {{ {style} }}")
+    
+    def _update_status_labels(self):
+        """Update status labels with theme-aware colors"""
+        if not self.theme_manager:
+            return
+        
+        theme = self.theme_manager.get_current_theme()
+        
+        # Update attachment summary label
+        if hasattr(self, 'attachment_summary_label'):
+            text_color = self.get_optimal_text_color(theme['attachment_bg'])
+            self.attachment_summary_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {text_color};
+                    font-size: 10px;
+                    font-weight: bold;
+                    padding: 4px 8px;
+                    background-color: {theme['attachment_bg']};
+                    border: 1px solid {theme['primary']};
+                    border-radius: 4px;
+                    margin-right: 8px;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                }}
+            """)
+        
+        # Update contact status label
+        if hasattr(self, 'status_label'):
+            style = self.text_helper.get_label_style('status')
+            self.status_label.setStyleSheet(f"QLabel {{ {style} }}")
+    
+    def _update_input_fields(self):
+        """Update input fields with enhanced visibility"""
+        if not self.theme_manager:
+            return
+        
+        theme = self.theme_manager.get_current_theme()
+        text_color = self.get_optimal_text_color(theme['surface'])
+        
+        # Enhanced input field styling
+        input_style = f"""
+            QLineEdit {{
+                background-color: {theme['surface']};
+                border: 1px solid {theme['border']};
+                border-radius: 6px;
+                padding: 8px 12px;
+                color: {text_color};
+                font-size: 14px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                selection-background-color: {theme['selection']};
+            }}
+            QLineEdit:focus {{
+                border: 2px solid {theme['border_focus']};
+                background-color: {theme['surface_container']};
+                padding: 7px 11px;
+            }}
+            QLineEdit:disabled {{
+                background-color: {theme['disabled_background']};
+                color: {theme['text_disabled']};
+                border-color: {theme['disabled']};
+            }}
+        """
+        
+        # Apply to input fields
+        for attr_name in ['from_email_input', 'subject_input']:
+            if hasattr(self, attr_name):
+                getattr(self, attr_name).setStyleSheet(input_style)
         self.setup_ui()
         self.connect_signals()
+        
+    def setup_validation(self):
+        """Set up validation timer and connections"""
+        self.validation_timer.setSingleShot(True)
+        self.validation_timer.timeout.connect(self.validate_attachments_delayed)
         
     def setup_ui(self):
         """Set up the compose screen UI based on Screen 2 design"""
@@ -90,35 +198,31 @@ class ComposeScreen(QWidget):
         """Create the enhanced header with step indicator, contact count, and attachment summary"""
         layout = QHBoxLayout()
         
-        # Step indicator
-        step_label = QLabel("Step 2 of 4: Compose Email")
-        step_label.setStyleSheet(TITLE_STYLE)
+        # Step indicator with enhanced visibility
+        step_label = self.create_themed_label("Step 2 of 4: Compose Email", "title")
+        self.step_label = step_label
         layout.addWidget(step_label)
+        
+        # Store for theme updates
+        self.themed_labels.append((step_label, "title"))
         
         # Spacer
         layout.addStretch()
         
-        # Attachment summary (when attachments exist)
-        self.attachment_summary_label = QLabel("")
-        self.attachment_summary_label.setStyleSheet(f"""
-            QLabel {{
-                color: {PRIMARY_BLUE};
-                font-size: 10px;
-                font-weight: bold;
-                padding: 4px 8px;
-                background-color: #E3F2FD;
-                border: 1px solid {PRIMARY_BLUE};
-                border-radius: 4px;
-                margin-right: 8px;
-            }}
-        """)
+        # Attachment summary (when attachments exist) with enhanced visibility
+        self.attachment_summary_label = self.create_themed_label("", "status")
         self.attachment_summary_label.setVisible(False)
         layout.addWidget(self.attachment_summary_label)
         
-        # Contact count status
-        self.status_label = QLabel("Ready to send to 0 contacts")
-        self.status_label.setStyleSheet(SUBTITLE_STYLE)
+        # Store for theme updates
+        self.themed_labels.append((self.attachment_summary_label, "status"))
+        
+        # Contact count status with enhanced visibility
+        self.status_label = self.create_themed_label("Ready to send to 0 contacts", "status")
         layout.addWidget(self.status_label)
+        
+        # Store for theme updates
+        self.themed_labels.append((self.status_label, "status"))
         
         return layout
         
@@ -143,21 +247,23 @@ class ComposeScreen(QWidget):
     def create_from_settings(self):
         """Create the compact From settings section with consistent card design"""
         group = QGroupBox("From settings")
+        # Use dynamic theme colors
+        theme_colors = self.theme_manager.get_theme()
         group.setStyleSheet(f"""
             QGroupBox {{
                 font-weight: bold;
-                border: 1px solid {BORDER_GREY};
+                border: 1px solid {theme_colors['border']};
                 border-radius: 4px;
                 margin-top: 8px;
                 padding-top: 12px;
-                background-color: #FAFAFA;
+                background-color: {theme_colors['surface']};
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 10px;
                 padding: 0 5px 0 5px;
-                color: {DARK_GREY};
-                background-color: #FAFAFA;
+                color: {theme_colors['text_primary']};
+                background-color: {theme_colors['surface']};
             }}
         """)
         
@@ -170,7 +276,7 @@ class ComposeScreen(QWidget):
         from_email_label.setStyleSheet(f"""
             QLabel {{
                 font-weight: bold;
-                color: {DARK_GREY};
+                color: {theme_colors['text_primary']};
                 font-size: 12px;
                 margin-bottom: 5px;
             }}
@@ -183,16 +289,20 @@ class ComposeScreen(QWidget):
         self.from_email_input.setPlaceholderText("your-email@example.com")
         self.from_email_input.setStyleSheet(f"""
             QLineEdit {{
-                border: 1px solid {BORDER_GREY};
+                border: 1px solid {theme_colors['border']};
                 border-radius: 4px;
                 padding: 8px 12px;
                 font-size: 12px;
-                background-color: white;
+                background-color: {theme_colors['surface']};
+                color: {theme_colors['text_primary']};
                 min-height: 20px;
             }}
             QLineEdit:focus {{
-                border-color: {PRIMARY_BLUE};
+                border-color: {theme_colors['primary']};
                 outline: none;
+            }}
+            QLineEdit::placeholder {{
+                color: {theme_colors['text_placeholder']};
             }}
         """)
         layout.addWidget(self.from_email_input)
@@ -205,7 +315,7 @@ class ComposeScreen(QWidget):
         subject_label.setStyleSheet(f"""
             QLabel {{
                 font-weight: bold;
-                color: {DARK_GREY};
+                color: {theme_colors['text_primary']};
                 font-size: 12px;
                 margin-bottom: 5px;
             }}
@@ -218,16 +328,20 @@ class ComposeScreen(QWidget):
         self.subject_input.setPlaceholderText("Enter your email subject...")
         self.subject_input.setStyleSheet(f"""
             QLineEdit {{
-                border: 1px solid {BORDER_GREY};
+                border: 1px solid {theme_colors['border']};
                 border-radius: 4px;
                 padding: 8px 12px;
                 font-size: 12px;
-                background-color: white;
+                background-color: {theme_colors['surface']};
+                color: {theme_colors['text_primary']};
                 min-height: 20px;
             }}
             QLineEdit:focus {{
-                border-color: {PRIMARY_BLUE};
+                border-color: {theme_colors['primary']};
                 outline: none;
+            }}
+            QLineEdit::placeholder {{
+                color: {theme_colors['text_placeholder']};
             }}
         """)
         layout.addWidget(self.subject_input)
@@ -241,21 +355,22 @@ class ComposeScreen(QWidget):
     def create_personalization_help(self):
         """Create the expanded personalization help section with consistent card design"""
         group = QGroupBox("Personalization help")
+        theme_colors = self.theme_manager.get_theme()
         group.setStyleSheet(f"""
             QGroupBox {{
                 font-weight: bold;
-                border: 1px solid {BORDER_GREY};
+                border: 1px solid {theme_colors['border']};
                 border-radius: 4px;
                 margin-top: 8px;
                 padding-top: 12px;
-                background-color: #FAFAFA;
+                background-color: {theme_colors['surface']};
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 10px;
                 padding: 0 5px 0 5px;
-                color: {DARK_GREY};
-                background-color: #FAFAFA;
+                color: {theme_colors['text_primary']};
+                background-color: {theme_colors['surface']};
             }}
         """)
         
@@ -268,7 +383,7 @@ class ComposeScreen(QWidget):
         placeholders_label.setStyleSheet(f"""
             QLabel {{
                 font-weight: bold;
-                color: {DARK_GREY};
+                color: {theme_colors['text_primary']};
                 font-size: 12px;
                 margin-bottom: 5px;
             }}
@@ -279,27 +394,28 @@ class ComposeScreen(QWidget):
         self.placeholder_list = QListWidget()
         self.placeholder_list.setStyleSheet(f"""
             QListWidget {{
-                border: 1px solid {BORDER_GREY};
+                border: 1px solid {theme_colors['border']};
                 border-radius: 4px;
-                background-color: white;
-                selection-background-color: #2196F3;
-                selection-color: white;
+                background-color: {theme_colors['surface']};
+                selection-background-color: {theme_colors['primary']};
+                selection-color: {theme_colors['text_on_primary']};
                 font-family: monospace;
                 font-size: 11px;
                 min-height: 120px;
                 max-height: 120px;
+                color: {theme_colors['text_primary']};
             }}
             QListWidget::item {{
                 padding: 8px 10px;
-                border-bottom: 1px solid #F0F0F0;
-                color: #333333;
+                border-bottom: 1px solid {theme_colors['border']};
+                color: {theme_colors['text_primary']};
             }}
             QListWidget::item:hover {{
-                background-color: #E3F2FD;
+                background-color: {theme_colors['hover_overlay']};
             }}
             QListWidget::item:selected {{
-                background-color: {PRIMARY_BLUE};
-                color: white;
+                background-color: {theme_colors['primary']};
+                color: {theme_colors['text_on_primary']};
             }}
         """)
         
@@ -317,7 +433,7 @@ class ComposeScreen(QWidget):
         # Expanded insert button
         insert_btn = QPushButton("Insert Selected")
         insert_btn.clicked.connect(self.insert_selected_placeholder)
-        insert_btn.setStyleSheet(BUTTON_STYLE)
+        self._apply_button_theme(insert_btn, "primary")
         layout.addWidget(insert_btn)
         
         # Add some bottom spacing
@@ -330,21 +446,22 @@ class ComposeScreen(QWidget):
         """Create the enhanced email body section with EmailEditor and attachment feedback"""
         # Main container as a card
         group = QGroupBox("Email body")
+        theme_colors = self.theme_manager.get_theme()
         group.setStyleSheet(f"""
             QGroupBox {{
                 font-weight: bold;
-                border: 1px solid {BORDER_GREY};
+                border: 1px solid {theme_colors['border']};
                 border-radius: 4px;
                 margin-top: 8px;
                 padding-top: 12px;
-                background-color: #FAFAFA;
+                background-color: {theme_colors['surface']};
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 10px;
                 padding: 0 5px 0 5px;
-                color: {DARK_GREY};
-                background-color: #FAFAFA;
+                color: {theme_colors['text_primary']};
+                background-color: {theme_colors['surface']};
             }}
         """)
         
@@ -473,45 +590,32 @@ class ComposeScreen(QWidget):
         layout = QHBoxLayout()
         layout.setSpacing(15)
         
-        # Back button
-        back_btn = QPushButton("Back")
+        # Back button with enhanced theming
+        back_btn = self.create_themed_button("Back", "secondary")
         back_btn.clicked.connect(self.on_back_clicked)
-        back_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {LIGHT_GREY};
-                color: #333333;
-                border: 2px solid {BORDER_GREY};
-                padding: 10px 20px;
-                border-radius: 4px;
-                font-weight: bold;
-                font-size: 12px;
-                min-width: 80px;
-                min-height: 36px;
-            }}
-            QPushButton:hover {{
-                background-color: #EEEEEE;
-                border-color: #CCCCCC;
-            }}
-            QPushButton:pressed {{
-                background-color: #E0E0E0;
-            }}
-        """)
+        
+        # Store for theme updates
+        self.themed_buttons.append((back_btn, "secondary"))
         layout.addWidget(back_btn)
         
         # Spacer
         layout.addStretch()
         
-        # Preview Emails button (primary)
-        self.preview_btn = QPushButton("Preview Emails")
+        # Preview Emails button (primary) with enhanced theming
+        self.preview_btn = self.create_themed_button("Preview Emails", "primary")
         self.preview_btn.clicked.connect(self.on_preview_clicked)
-        self.preview_btn.setStyleSheet(BUTTON_STYLE)
         self.preview_btn.setEnabled(False)  # Disabled until content is ready
+        
+        # Store for theme updates
+        self.themed_buttons.append((self.preview_btn, "primary"))
         layout.addWidget(self.preview_btn)
         
-        # Exit button
-        exit_btn = QPushButton("Exit")
+        # Exit button with enhanced theming
+        exit_btn = self.create_themed_button("Exit", "error")
         exit_btn.clicked.connect(self.on_exit_clicked)
-        exit_btn.setStyleSheet(ERROR_BUTTON_STYLE)
+        
+        # Store for theme updates
+        self.themed_buttons.append((exit_btn, "error"))
         layout.addWidget(exit_btn)
         
         return layout

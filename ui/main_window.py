@@ -23,13 +23,17 @@ from ui.screens.preview_screen import PreviewScreen
 from ui.screens.progress_screen import ProgressScreen
 from ui.screens.complete_screen import CompleteScreen
 
-# Import styles
+# Import styles and theme system
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUCCESS_BUTTON_STYLE, ERROR_BUTTON_STYLE,
     INPUT_STYLE, CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE,
     PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, LIGHT_GREY, BORDER_GREY,
     WARNING_ORANGE, DARK_GREY
 )
+
+# Import theme system
+from core.theme_manager import ThemeManager
+from ui.styles.dynamic_stylesheet import DynamicStylesheetGenerator
 
 
 class MainWindow(QMainWindow):
@@ -52,12 +56,20 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        # Initialize theme system
+        self.theme_manager = ThemeManager.instance()
+        if self.theme_manager is None:
+            # Fallback: create a new instance if singleton failed
+            self.theme_manager = ThemeManager()
+        self.stylesheet_generator = DynamicStylesheetGenerator(self.theme_manager)
+        
         # Window state
         self.current_screen_index = 0
         self.campaign_data = {}
         self.navigation_history = []
         
         # Set up the main window
+        self.setup_theme_system()
         self.setup_window_properties()
         self.setup_ui()
         self.setup_menu_bar()
@@ -66,6 +78,74 @@ class MainWindow(QMainWindow):
         
         # Start with upload screen
         self.show_upload_screen()
+        
+    def setup_theme_system(self):
+        """Initialize and configure the theme system"""
+        # Connect to theme changes
+        self.theme_manager.theme_changed.connect(self.on_theme_changed)
+        
+        # Apply initial theme
+        self.apply_current_theme()
+        
+        # Set up system theme monitoring (already handled by ThemeManager)
+        print(f"Theme system initialized. Current theme: {self.theme_manager.get_current_theme_name()}")
+    
+    def on_theme_changed(self, theme_name: str):
+        """Handle theme changes from the theme manager"""
+        print(f"Theme changed to: {theme_name}")
+        self.apply_current_theme()
+        
+        # Notify all child widgets that support theme changes
+        self.propagate_theme_change(theme_name)
+    
+    def apply_current_theme(self):
+        """Apply the current theme to this window"""
+        stylesheet = self.stylesheet_generator.generate_stylesheet()
+        self.setStyleSheet(stylesheet)
+    
+    def propagate_theme_change(self, theme_name: str):
+        """Propagate theme changes to all child widgets"""
+        # Find all widgets that have theme change handlers
+        for widget in self.findChildren(QWidget):
+            if hasattr(widget, 'on_theme_changed'):
+                try:
+                    widget.on_theme_changed(theme_name)
+                except Exception as e:
+                    print(f"Warning: Failed to apply theme to widget {widget}: {e}")
+        
+        # Update navigation header colors
+        self.update_navigation_header_theme()
+    
+    def update_navigation_header_theme(self):
+        """Update navigation header with current theme"""
+        theme = self.theme_manager.get_theme()
+        
+        if hasattr(self, 'navigation_header'):
+            self.navigation_header.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {theme['surface']};
+                    border-bottom: 1px solid {theme['border']};
+                }}
+            """)
+        
+        if hasattr(self, 'screen_title'):
+            self.screen_title.setStyleSheet(f"color: {theme['text_primary']};")
+        
+        if hasattr(self, 'step_indicator'):
+            self.step_indicator.setStyleSheet(f"color: {theme['primary']}; font-weight: bold;")
+    
+    def toggle_theme(self):
+        """Toggle between light and dark themes (for testing/manual switching)"""
+        current_theme = self.theme_manager.get_current_theme_name()
+        new_theme = "dark" if current_theme == "light" else "light"
+        
+        # Temporarily disable auto-detection for manual switching
+        self.theme_manager.set_auto_detect(False)
+        self.theme_manager.set_theme(new_theme)
+    
+    def enable_auto_theme(self):
+        """Re-enable automatic theme detection"""
+        self.theme_manager.set_auto_detect(True)
         
     def setup_window_properties(self):
         """Configure main window properties"""
@@ -84,32 +164,8 @@ class MainWindow(QMainWindow):
         if os.path.exists(icon_path):
             self.setWindowIcon(QIcon(icon_path))
             
-        # Apply application style
-        self.setStyleSheet(f"""
-            QMainWindow {{
-                background-color: {LIGHT_GREY};
-                color: {DARK_GREY};
-                font-family: Arial, Helvetica, sans-serif;
-            }}
-            QMenuBar {{
-                background-color: white;
-                border-bottom: 1px solid {BORDER_GREY};
-                padding: 4px;
-            }}
-            QMenuBar::item {{
-                padding: 8px 12px;
-                background-color: transparent;
-            }}
-            QMenuBar::item:selected {{
-                background-color: {PRIMARY_BLUE};
-                color: white;
-            }}
-            QStatusBar {{
-                background-color: white;
-                border-top: 1px solid {BORDER_GREY};
-                color: {DARK_GREY};
-            }}
-        """)
+        # Theme-based styling is now handled by apply_current_theme()
+        # which is called from setup_theme_system()
         
     def center_window(self):
         """Center the window on the screen"""
@@ -146,12 +202,7 @@ class MainWindow(QMainWindow):
         """Create optional navigation header with breadcrumb"""
         header_frame = QFrame()
         header_frame.setFixedHeight(50)
-        header_frame.setStyleSheet(f"""
-            QFrame {{
-                background-color: white;
-                border-bottom: 1px solid {BORDER_GREY};
-            }}
-        """)
+        # Styling will be applied by update_navigation_header_theme()
         
         layout = QHBoxLayout()
         layout.setContentsMargins(20, 10, 20, 10)
@@ -160,14 +211,14 @@ class MainWindow(QMainWindow):
         # Screen title
         self.screen_title = QLabel("Upload Contacts")
         self.screen_title.setFont(QFont("Arial", 16, QFont.Bold))
-        self.screen_title.setStyleSheet(f"color: {DARK_GREY};")
+        # Styling will be applied by update_navigation_header_theme()
         layout.addWidget(self.screen_title)
         
         layout.addStretch()
         
         # Step indicator
         self.step_indicator = QLabel("Step 1 of 4")
-        self.step_indicator.setStyleSheet(f"color: {PRIMARY_BLUE}; font-weight: bold;")
+        # Styling will be applied by update_navigation_header_theme()
         layout.addWidget(self.step_indicator)
         
         return header_frame
@@ -254,6 +305,28 @@ class MainWindow(QMainWindow):
         about_action = QAction('&About', self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
+        
+        # Theme Menu (for manual theme control)
+        theme_menu = menubar.addMenu('&Theme')
+        
+        auto_theme_action = QAction('&Auto (Follow System)', self)
+        auto_theme_action.setCheckable(True)
+        auto_theme_action.setChecked(self.theme_manager.get_auto_detect())
+        auto_theme_action.triggered.connect(self.set_auto_theme)
+        theme_menu.addAction(auto_theme_action)
+        
+        theme_menu.addSeparator()
+        
+        light_theme_action = QAction('&Light Theme', self)
+        light_theme_action.triggered.connect(lambda: self.set_manual_theme('light'))
+        theme_menu.addAction(light_theme_action)
+        
+        dark_theme_action = QAction('&Dark Theme', self)
+        dark_theme_action.triggered.connect(lambda: self.set_manual_theme('dark'))
+        theme_menu.addAction(dark_theme_action)
+        
+        # Store theme actions for updating
+        self.auto_theme_action = auto_theme_action
         
     def setup_status_bar(self):
         """Set up the status bar"""
@@ -444,6 +517,19 @@ class MainWindow(QMainWindow):
                 
         self.window_closing.emit()
         self.close()
+    
+    def set_auto_theme(self):
+        """Enable automatic theme detection"""
+        self.theme_manager.set_auto_detect(True)
+        self.auto_theme_action.setChecked(True)
+        print("Auto theme detection enabled")
+    
+    def set_manual_theme(self, theme_name: str):
+        """Set manual theme and disable auto-detection"""
+        self.theme_manager.set_auto_detect(False)
+        self.theme_manager.set_theme(theme_name)
+        self.auto_theme_action.setChecked(False)
+        print(f"Manual theme set to: {theme_name}")
     
     def show_about(self):
         """Show about dialog"""

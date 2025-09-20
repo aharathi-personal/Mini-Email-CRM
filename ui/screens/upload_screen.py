@@ -17,14 +17,20 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 
 from ui.widgets.file_upload import FileUploadWidget
+
+# Import new theme system
+from ui.base.themed_widgets import ThemedWidget, apply_button_style
+
+# Import legacy styles for backward compatibility during transition
 from ui.styles.stylesheet import (
     TITLE_STYLE, SUBTITLE_STYLE, BUTTON_STYLE, SUCCESS_BUTTON_STYLE
 )
 
 
-class UploadScreen(QWidget):
+class UploadScreen(ThemedWidget):
     """
     First screen of the application for uploading contact CSV files
+    Now inherits from ThemedWidget for automatic theme support
     """
     
     # Signals
@@ -35,6 +41,38 @@ class UploadScreen(QWidget):
         super().__init__(parent)
         self.uploaded_file_path = None
         self.setup_ui()
+    
+    def apply_theme_customizations(self):
+        """Apply custom theme-specific changes beyond stylesheets"""
+        # Update button styles using the theme system
+        if hasattr(self, 'back_button'):
+            apply_button_style(self.back_button, "primary")
+        
+        if hasattr(self, 'next_button'):
+            apply_button_style(self.next_button, "success")
+        
+        # Update title and subtitle with theme colors
+        theme = self.get_current_theme()
+        
+        if hasattr(self, 'title_label'):
+            self.title_label.setStyleSheet(f"""
+                QLabel {{
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: {theme['text_primary']};
+                }}
+            """)
+        
+        if hasattr(self, 'subtitle_label'):
+            self.subtitle_label.setStyleSheet(f"""
+                QLabel {{
+                    font-family: Arial, Helvetica, sans-serif;
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: {theme['text_secondary']};
+                }}
+            """)
         
     def setup_ui(self):
         """Set up the user interface"""
@@ -44,17 +82,17 @@ class UploadScreen(QWidget):
         header_layout = QVBoxLayout()
         
         # Title
-        title = QLabel("Step 1 of 4: Upload Contact List")
-        title.setStyleSheet(TITLE_STYLE)
-        title.setAlignment(Qt.AlignCenter)
-        header_layout.addWidget(title)
+        self.title_label = QLabel("Step 1 of 4: Upload Contact List")
+        # Theme styling will be applied by apply_theme_customizations()
+        self.title_label.setAlignment(Qt.AlignCenter)
+        header_layout.addWidget(self.title_label)
         
         # Subtitle
-        subtitle = QLabel("Upload a CSV file containing your contact list with email, firstname, and lastname columns")
-        subtitle.setAlignment(Qt.AlignCenter)
-        subtitle.setStyleSheet(SUBTITLE_STYLE)
-        subtitle.setWordWrap(True)
-        header_layout.addWidget(subtitle)
+        self.subtitle_label = QLabel("Upload a CSV file containing your contact list with email, firstname, and lastname columns")
+        self.subtitle_label.setAlignment(Qt.AlignCenter)
+        # Theme styling will be applied by apply_theme_customizations()
+        self.subtitle_label.setWordWrap(True)
+        header_layout.addWidget(self.subtitle_label)
         
         layout.addLayout(header_layout)
         
@@ -76,7 +114,7 @@ class UploadScreen(QWidget):
         # Back button (for future use)
         self.back_button = QPushButton("← Back")
         self.back_button.setEnabled(False)  # Not used in first screen
-        self.back_button.setStyleSheet(BUTTON_STYLE)
+        # Theme styling will be applied by apply_theme_customizations()
         nav_layout.addWidget(self.back_button)
         
         # Add spacing
@@ -85,7 +123,7 @@ class UploadScreen(QWidget):
         # Next button
         self.next_button = QPushButton("Next: Review Contacts →")
         self.next_button.setEnabled(False)  # Enabled only when file is uploaded
-        self.next_button.setStyleSheet(SUCCESS_BUTTON_STYLE)
+        # Theme styling will be applied by apply_theme_customizations()
         self.next_button.clicked.connect(self.on_next_clicked)
         nav_layout.addWidget(self.next_button)
         
