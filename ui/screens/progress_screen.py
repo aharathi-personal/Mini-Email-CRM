@@ -77,6 +77,7 @@ class ProgressScreen(QWidget):
         self.success_count = 0
         self.failed_count = 0
         self.attachment_failures = 0
+        self.failed_emails = []  # List to track failed email addresses
         
         # State tracking
         self.is_paused = False
@@ -973,6 +974,9 @@ class ProgressScreen(QWidget):
         """Log a failed email send"""
         self.failed_count += 1
         
+        # Add email to failed emails list for CSV export
+        self.failed_emails.append(email)
+        
         if is_attachment_issue:
             self.attachment_failures += 1
             self.log_entry(f"❌ Failed to send to {email} - {reason}", ERROR_RED)
@@ -1101,7 +1105,12 @@ class ProgressScreen(QWidget):
             'attachment_failures': self.attachment_failures,
             'duration': duration,
             'start_time': self.campaign_start_time,
-            'end_time': datetime.now()
+            'end_time': datetime.now(),
+            # Include campaign data for CSV export
+            'contacts': self.contacts,
+            'attachments': self.attachments,
+            'campaign_data': self.campaign_data,
+            'failed_emails': self.failed_emails
         }
         
         self.campaign_completed.emit(completion_stats)
@@ -1373,6 +1382,7 @@ class ProgressScreen(QWidget):
         self.success_count = 0
         self.failed_count = 0
         self.attachment_failures = 0
+        self.failed_emails = []  # Reset failed emails list
         
         self.is_paused = False
         self.is_cancelled = False

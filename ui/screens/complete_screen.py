@@ -8,6 +8,7 @@ featuring campaign statistics, success indicators, and action buttons.
 
 import sys
 import os
+import csv
 from datetime import datetime
 
 from PyQt5.QtWidgets import (
@@ -364,8 +365,97 @@ class CompleteScreen(QWidget):
         self.new_campaign_clicked.emit()
         
     def on_export_clicked(self):
-        """Handle export results button click"""
-        self.export_results_clicked.emit()
+        """Handle export results button click - Export campaign results to CSV"""
+        try:
+            # Get default filename with timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            default_filename = f"email_campaign_results_{timestamp}.csv"
+            
+            # Open file dialog to get save location
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Export Campaign Results",
+                default_filename,
+                "CSV files (*.csv);;All files (*.*)"
+            )
+            
+            if file_path:
+                # Export to CSV
+                self.export_to_csv(file_path)
+                QMessageBox.information(
+                    self,
+                    "Export Successful",
+                    f"Campaign results exported successfully to:\n{file_path}"
+                )
+        except Exception as e:
+            QMessageBox.critical(
+                self,
+                "Export Error",
+                f"Failed to export campaign results:\n{str(e)}"
+            )
+    
+    def export_to_csv(self, file_path):
+        """Export campaign results to CSV file with specified format"""
+        # CSV Headers: Email, FirstName, LastName, Attachment(y/n), AttachmentName, EmailSent(y/n)
+        headers = ['Email', 'FirstName', 'LastName', 'Attachment(y/n)', 'AttachmentName', 'EmailSent(y/n)']
+        
+        # Get contacts from completion stats (new structure) or campaign_data (fallback)
+        contacts = self.completion_stats.get('contacts', self.campaign_data.get('contacts', []))
+        attachments = self.completion_stats.get('attachments', self.campaign_data.get('attachments', []))
+        
+        # Get failed emails list
+        failed_emails_list = self.completion_stats.get('failed_emails', [])
+        if not failed_emails_list and self.failed_emails:
+            # Fallback to the old failed_emails structure
+            failed_emails_list = []
+            for failed_item in self.failed_emails:
+                if isinstance(failed_item, dict):
+                    failed_emails_list.append(failed_item.get('email', ''))
+                else:
+                    failed_emails_list.append(str(failed_item))
+        
+        # Create a set of failed email addresses for quick lookup
+        failed_email_set = set(failed_emails_list)
+        
+        # Prepare attachment information
+        has_attachments = len(attachments) > 0
+        attachment_names = ", ".join([
+            att.get('filename', att.get('name', att.get('path', 'Unknown'))) 
+            for att in attachments
+        ]) if attachments else ""
+        
+        # Write CSV file
+        with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.writer(csvfile)
+            
+            # Write header
+            writer.writerow(headers)
+            
+            # Write data rows
+            for contact in contacts:
+                email = contact.get('email', '')
+                first_name = contact.get('firstname', contact.get('first_name', ''))
+                last_name = contact.get('lastname', contact.get('last_name', ''))
+                
+                # Determine if email was sent successfully
+                email_sent = 'n' if email in failed_email_set else 'y'
+                
+                # Attachment information
+                has_attachment = 'y' if has_attachments else 'n'
+                
+                # Write row
+                writer.writerow([
+                    email,
+                    first_name,
+                    last_name,
+                    has_attachment,
+                    attachment_names,
+                    email_sent
+                ])
+                
+        print(f"CSV export completed: {file_path}")
+        print(f"Exported {len(contacts)} contacts with attachments: {has_attachments}")
+        print(f"Failed emails: {failed_emails_list}")
         
     def on_exit_clicked(self):
         """Handle exit application button click"""
@@ -390,8 +480,7 @@ class CompleteScreen(QWidget):
             return
             
         total = self.completion_stats.get('total_emails', 0)
-        failed = self.completion_stats.get('failed_emails', 
-                self.completion_stats.get('failed_count', 0))
+        failed = self.completion_stats.get('failed_count', 0)
         successful = total - failed
         
         if failed == 0 and total > 0:
@@ -399,8 +488,12 @@ class CompleteScreen(QWidget):
         else:
             self.campaign_summary.setText("Your email campaign has been completed successfully")
         
-    def update_statistics_display(self):
+    def update_statistics_display(self, stats=None):
         """Update the statistics display with completion data"""
+        # Use provided stats or fall back to instance variable
+        if stats:
+            self.completion_stats = stats
+        
         # Update stat values - handle both naming conventions
         total = self.completion_stats.get('total_emails', 0)
         successful = self.completion_stats.get('successful_emails', 
@@ -408,22 +501,34 @@ class CompleteScreen(QWidget):
         failed = self.completion_stats.get('failed_emails', 
                 self.completion_stats.get('failed_count', 0))
         
+        # Update self.failed_emails from stats if provided
+        failed_emails_list = self.completion_stats.get('failed_emails_list', [])
+        if failed_emails_list:
+            self.failed_emails = failed_emails_list
+        
         # Ensure stats are visible across all scenarios
         if hasattr(self, 'stats_container'):
             self.stats_container.show()
         self.total_display.show()
         self.success_display.show()
-        self.failed_display.show()
+        
+        # Only show failed display if there are failed emails
+        if failed > 0:
+            self.failed_display.show()
+            self.failed_display.setText(f"{failed} failed")
+            self.failed_label.setText(f"{failed} failed")
+            self.failed_value_label.setText(str(failed))
+        else:
+            self.failed_display.hide()
+            self.failed_label.setVisible(False)
 
         # Update the visible display labels
         self.total_display.setText(f"{total} total emails attempted")
         self.success_display.setText(f"{successful} successfully sent")
-        self.failed_display.setText(f"{failed} failed")
         
         # Update the hidden compatibility labels for tests
         self.total_label.setText(f"{total} total emails attempted")
         self.success_label.setText(f"{successful} successfully sent")
-        self.failed_label.setText(f"{failed} failed")
         
         # The CompatLabel wrappers will extract the numbers automatically
         # via their setText methods which update the underlying label
@@ -465,6 +570,9 @@ class CompleteScreen(QWidget):
                     self.duration_label.setText("Unknown duration")
             else:
                 self.duration_label.setText("Duration not available")
+        
+        # Update the failed emails button visibility
+        self.update_failed_emails_button()
             
     def update_attachment_display(self):
         """Update attachment statistics display - simplified for this design"""
@@ -515,12 +623,14 @@ class CompleteScreen(QWidget):
         # Reset the visible display labels
         self.total_display.setText("0 total emails attempted")
         self.success_display.setText("0 successfully sent")  
-        self.failed_display.setText("0 failed")
+        # Hide failed display since there are no failed emails in reset state
+        self.failed_display.hide()
         
         # Reset hidden compatibility labels
         self.total_label.setText("0 total emails attempted")
         self.success_label.setText("0 successfully sent")
-        self.failed_label.setText("0 failed")
+        # Hide failed label since there are no failed emails in reset state
+        self.failed_label.setVisible(False)
         self.duration_label.setText("0 minutes")
         
         # Reset individual value labels using CompatLabel wrappers
