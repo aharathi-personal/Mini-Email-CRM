@@ -498,13 +498,22 @@ class CompleteScreen(QWidget):
         total = self.completion_stats.get('total_emails', 0)
         successful = self.completion_stats.get('successful_emails', 
                     self.completion_stats.get('success_count', 0))
-        failed = self.completion_stats.get('failed_emails', 
-                self.completion_stats.get('failed_count', 0))
+        
+        # Get failed count - handle case where failed_emails might be a list
+        failed_data = self.completion_stats.get('failed_emails', 
+                     self.completion_stats.get('failed_count', 0))
+        if isinstance(failed_data, list):
+            failed = len(failed_data)
+        else:
+            failed = failed_data
         
         # Update self.failed_emails from stats if provided
         failed_emails_list = self.completion_stats.get('failed_emails_list', [])
         if failed_emails_list:
             self.failed_emails = failed_emails_list
+        elif isinstance(failed_data, list):
+            # If failed_emails is a list, use it as the failed emails list
+            self.failed_emails = failed_data
         
         # Ensure stats are visible across all scenarios
         if hasattr(self, 'stats_container'):
