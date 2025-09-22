@@ -217,11 +217,35 @@ class FileUploadWidget(QWidget):
                 except:
                     pass  # It's okay if we can't read the first row
                 
-                # If we get here, the file is valid
-                file.seek(0)  # Reset file pointer
-                row_count = sum(1 for _ in reader) - 1  # Subtract header row
+                # If we get here, basic structure is valid
+                # Now get actual valid contact count using CSV handler
+                try:
+                    from core.csv_handler import CSVHandler
+                    csv_handler = CSVHandler()
+                    result = csv_handler.process_csv_file(file_path)
+                    
+                    if result and result.get('success', False):
+                        valid_contacts = len(result.get('contacts', []))
+                        total_rows = result.get('total_rows', 0)
+                        
+                        if valid_contacts == total_rows:
+                            self.show_validation_success(f"Valid CSV file with {valid_contacts} contacts found.")
+                        else:
+                            # Some contacts were skipped
+                            skipped = total_rows - valid_contacts
+                            self.show_validation_success(f"Valid CSV file with {valid_contacts} valid contacts found ({skipped} skipped due to missing emails).")
+                    else:
+                        # Fallback to basic row count if CSV processing fails
+                        file.seek(0)  # Reset file pointer
+                        row_count = sum(1 for _ in reader) - 1  # Subtract header row
+                        self.show_validation_success(f"Valid CSV file with ~{row_count} contacts found.")
+                        
+                except Exception as csv_error:
+                    # Fallback to basic validation if CSV handler fails
+                    file.seek(0)  # Reset file pointer
+                    row_count = sum(1 for _ in reader) - 1  # Subtract header row
+                    self.show_validation_success(f"Valid CSV file with ~{row_count} contacts found.")
                 
-                self.show_validation_success(f"Valid CSV file with {row_count} contacts found.")
                 return True
                 
         except UnicodeDecodeError:

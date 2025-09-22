@@ -137,16 +137,48 @@ class UploadScreen(ThemedWidget):
         self.next_button.setEnabled(True)
         self.file_uploaded.emit(file_path)
         
-        # Update next button text with contact count
+        # Update next button text with VALID contact count using CSV handler
         try:
-            import csv
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
-                reader = csv.reader(file)
-                next(reader)  # Skip header
-                contact_count = sum(1 for _ in reader)
-                self.next_button.setText(f"Next: Review {contact_count} Contacts →")
-        except:
-            self.next_button.setText("Next: Review Contacts →")
+            from core.csv_handler import CSVHandler
+            
+            # Process CSV to get actual valid contact count
+            csv_handler = CSVHandler()
+            result = csv_handler.process_csv_file(file_path)
+            
+            if result and result.get('success', False):
+                valid_contact_count = len(result.get('contacts', []))
+                total_rows = result.get('total_rows', 0)
+                
+                if valid_contact_count != total_rows:
+                    # Some contacts were skipped due to validation issues
+                    self.next_button.setText(f"Next: Review {valid_contact_count} Valid Contacts →")
+                    print(f"📊 Upload Screen: {valid_contact_count}/{total_rows} contacts are valid")
+                else:
+                    # All contacts are valid
+                    self.next_button.setText(f"Next: Review {valid_contact_count} Contacts →")
+                    print(f"✅ Upload Screen: All {valid_contact_count} contacts are valid")
+            else:
+                # Fallback to raw count if CSV processing fails
+                import csv
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
+                    reader = csv.reader(file)
+                    next(reader)  # Skip header
+                    contact_count = sum(1 for _ in reader)
+                    self.next_button.setText(f"Next: Review ~{contact_count} Contacts →")
+                    print(f"⚠️ Upload Screen: Using raw count ({contact_count}) due to CSV processing failure")
+                    
+        except Exception as e:
+            # Fallback to basic row counting
+            try:
+                import csv
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
+                    reader = csv.reader(file)
+                    next(reader)  # Skip header
+                    contact_count = sum(1 for _ in reader)
+                    self.next_button.setText(f"Next: Review ~{contact_count} Contacts →")
+                    print(f"⚠️ Upload Screen: Using raw count ({contact_count}) due to error: {e}")
+            except:
+                self.next_button.setText("Next: Review Contacts →")
             
     def on_validation_error(self, error_message):
         """Handle validation errors"""

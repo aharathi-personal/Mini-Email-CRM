@@ -1041,17 +1041,37 @@ class PreviewScreen(ThemedWidget):
             self.update_email_preview(self.contacts[0])
     
     def load_contacts_from_csv(self, file_path):
-        """Load contacts from CSV file"""
+        """Load contacts from CSV file using CSV handler for proper validation"""
         contacts = []
         try:
-            import csv
-            with open(file_path, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    contact = Contact.from_dict(row)
-                    contacts.append(contact)
+            # Import CSV handler
+            from core.csv_handler import CSVHandler
+            
+            # Process CSV file with proper validation
+            csv_handler = CSVHandler()
+            result = csv_handler.process_csv_file(file_path)
+            
+            if result and result.get('success', False):
+                contacts = result.get('contacts', [])
+                
+                # Log processing results
+                total_rows = result.get('total_rows', 0)
+                valid_contacts = len(contacts)
+                print(f"📊 CSV Processing Results:")
+                print(f"   - Total rows processed: {total_rows}")
+                print(f"   - Valid contacts created: {valid_contacts}")
+                print(f"   - Invalid/skipped rows: {total_rows - valid_contacts}")
+                
+                if result.get('warnings'):
+                    print(f"   - Warnings: {result['warnings']}")
+                if result.get('errors'):
+                    print(f"   - Errors: {result['errors']}")
+            else:
+                error_msg = result.get('error', 'Unknown error') if result else 'Failed to process CSV file'
+                print(f"❌ CSV processing failed: {error_msg}")
+                
         except Exception as e:
-            print(f"Error loading contacts: {e}")
+            print(f"❌ Error loading contacts: {e}")
             
         return contacts
     

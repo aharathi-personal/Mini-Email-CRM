@@ -382,6 +382,9 @@ class CSVHandler:
             result['contacts'] = contacts
             result['success'] = True
             
+            # Add total_rows for accurate reporting
+            result['total_rows'] = len(df)
+            
             self.logger.info(f"Successfully processed {len(contacts)} contacts from CSV")
             
             # Add summary to statistics
