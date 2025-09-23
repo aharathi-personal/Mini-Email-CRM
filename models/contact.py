@@ -44,14 +44,42 @@ class Contact:
     def is_valid_email(self) -> bool:
         """
         Validate email format using regex
-        Supports standard email formats required for SMTP sending
+        Supports standard email formats including unicode and IP addresses
         """
         if not self.email:
             return False
         
-        # Comprehensive email regex pattern
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        return bool(re.match(email_pattern, self.email.strip()))
+        email = self.email.strip()
+        
+        # Basic structure check: must have @ and non-empty parts
+        if '@' not in email or email.count('@') != 1:
+            return False
+            
+        local, domain = email.split('@')
+        
+        # Local part validation (before @)
+        if not local or len(local) > 64:
+            return False
+            
+        # Domain part validation (after @)
+        if not domain or len(domain) > 253:
+            return False
+            
+        # Check for IP address domain (e.g., user@192.168.1.1)
+        ip_pattern = r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'
+        if re.match(ip_pattern, domain):
+            # Basic IP validation
+            parts = domain.split('.')
+            if all(0 <= int(part) <= 255 for part in parts):
+                return True
+        
+        # Regular domain validation (supports unicode)
+        # More permissive pattern that allows unicode characters
+        domain_pattern = r'^[a-zA-Z0-9\u00a1-\uffff.-]+\.[a-zA-Z\u00a1-\uffff]{2,}$'
+        if re.match(domain_pattern, domain):
+            return True
+            
+        return False
     
     def is_valid_phone(self) -> bool:
         """

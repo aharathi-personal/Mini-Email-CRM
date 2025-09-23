@@ -140,6 +140,7 @@ celerybeat.pid
 .venv
 env/
 venv/
+venv-test/
 ENV/
 env.bak/
 venv.bak/
@@ -210,3 +211,37 @@ __marimo__/
 tests/
 demos/
 exports/
+
+# Testing Infrastructure & Reports
+# Test runner and configuration
+run_tests.py
+requirements-test.txt
+test_demo.py
+pyproject.toml
+
+# Test reports and coverage
+reports/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+*.py.cover
+
+# Test cache and temporary files
+.pytest_cache/
+.tox/
+.nox/
+.cache
+nosetests.xml
+.hypothesis/
+
+# Test virtual environments
+venv-test/
+test-env/
+testing-env/
+
+# Test data and temporary files
+temp/
+logs/
+*.log
