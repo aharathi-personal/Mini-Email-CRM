@@ -1085,6 +1085,27 @@ class ComposeScreen(ThemedWidget):
     def get_validation_errors(self):
         """Get current validation errors"""
         return self.attachment_errors.copy()
+    
+    def refresh_smtp_settings(self):
+        """Refresh SMTP settings and auto-populate from email if available"""
+        try:
+            from config.settings import SMTP_SETTINGS
+            smtp_username = SMTP_SETTINGS.get('username', '').strip()
+            if smtp_username:
+                # Update the stored username
+                self._smtp_username = smtp_username
+                # Auto-populate the from email field
+                if hasattr(self, 'from_email_input'):
+                    self.from_email_input.setText(self._smtp_username)
+                    self.from_email_input.setToolTip(f"Auto-populated from SMTP credentials: {self._smtp_username}")
+                print(f"✅ SMTP settings refreshed. From email auto-populated: {smtp_username}")
+            else:
+                self._smtp_username = None
+                print("⚠️ No SMTP username found in settings")
+        except Exception as e:
+            # If there's any error loading SMTP settings, don't auto-populate
+            self._smtp_username = None
+            print(f"Warning: Could not refresh SMTP settings: {e}")
 
 
 # For development: run screen without test data

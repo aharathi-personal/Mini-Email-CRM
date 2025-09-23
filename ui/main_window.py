@@ -15,11 +15,13 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QSize, QTimer
 from PyQt5.QtGui import QFont, QIcon, QPalette
+from typing import Dict
 
 # Import themed error dialogs
 from ui.error_dialogs import ThemedMessageBox, ErrorDialogManager
 
 # Import screens
+from ui.screens.login_screen import LoginScreen
 from ui.screens.upload_screen import UploadScreen
 from ui.screens.compose_screen import ComposeScreen  
 from ui.screens.preview_screen import PreviewScreen
@@ -50,11 +52,12 @@ class MainWindow(QMainWindow):
     screen_changed = pyqtSignal(str)  # Screen name
     
     # Screen indices for navigation
-    SCREEN_UPLOAD = 0
-    SCREEN_COMPOSE = 1
-    SCREEN_PREVIEW = 2
-    SCREEN_PROGRESS = 3
-    SCREEN_COMPLETE = 4
+    SCREEN_LOGIN = 0
+    SCREEN_UPLOAD = 1
+    SCREEN_COMPOSE = 2
+    SCREEN_PREVIEW = 3
+    SCREEN_PROGRESS = 4
+    SCREEN_COMPLETE = 5
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -70,6 +73,7 @@ class MainWindow(QMainWindow):
         self.current_screen_index = 0
         self.campaign_data = {}
         self.navigation_history = []
+        self.smtp_credentials = None  # Store validated SMTP credentials
         
         # Set up the main window
         self.setup_theme_system()
@@ -79,8 +83,8 @@ class MainWindow(QMainWindow):
         self.setup_status_bar()
         self.connect_signals()
         
-        # Start with upload screen
-        self.show_upload_screen()
+        # Start with login screen
+        self.show_login_screen()
         
     def setup_theme_system(self):
         """Initialize and configure the theme system"""
@@ -229,6 +233,12 @@ class MainWindow(QMainWindow):
     def setup_screens(self):
         """Initialize and add all screens to the stacked widget"""
         try:
+            # Screen 0: Login
+            print("Initializing Login Screen...")
+            self.login_screen = LoginScreen()
+            self.stacked_widget.addWidget(self.login_screen)
+            print("✅ Login Screen initialized successfully")
+            
             # Screen 1: Upload Contacts
             print("Initializing Upload Screen...")
             self.upload_screen = UploadScreen()
@@ -289,6 +299,13 @@ class MainWindow(QMainWindow):
         
         # Navigation Menu
         nav_menu = menubar.addMenu('&Navigation')
+        
+        login_action = QAction('&Login', self)
+        login_action.setShortcut('Ctrl+0')
+        login_action.triggered.connect(self.show_login_screen)
+        nav_menu.addAction(login_action)
+        
+        nav_menu.addSeparator()
         
         upload_action = QAction('&Upload Contacts', self)
         upload_action.setShortcut('Ctrl+1')
@@ -356,6 +373,12 @@ class MainWindow(QMainWindow):
     def connect_signals(self):
         """Connect signals from all screens"""
         try:
+            # Login Screen signals
+            if hasattr(self.login_screen, 'login_successful'):
+                self.login_screen.login_successful.connect(self.on_login_success)
+            if hasattr(self.login_screen, 'exit_requested'):
+                self.login_screen.exit_requested.connect(self.close_application)
+                
             # Upload Screen signals
             if hasattr(self.upload_screen, 'next_screen'):
                 self.upload_screen.next_screen.connect(self.on_upload_next)
@@ -394,6 +417,14 @@ class MainWindow(QMainWindow):
             print(f"Warning: Some signals could not be connected: {e}")
     
     # Navigation Methods
+    def show_login_screen(self):
+        """Navigate to login screen"""
+        self.current_screen_index = self.SCREEN_LOGIN
+        self.stacked_widget.setCurrentIndex(self.current_screen_index)
+        self.update_navigation_display("SMTP Login", "Login")
+        self.status_bar.showMessage("Enter your SMTP credentials to continue")
+        self.screen_changed.emit("login")
+        
     def show_upload_screen(self):
         """Navigate to upload screen"""
         self.current_screen_index = self.SCREEN_UPLOAD
@@ -444,6 +475,23 @@ class MainWindow(QMainWindow):
             self.screen_status.setText(f"Screen: {title}")
     
     # Screen transition handlers
+    def on_login_success(self, credentials: dict):
+        """Handle successful login with validated credentials"""
+        self.smtp_credentials = credentials
+        
+        # Store credentials in campaign data for use by other screens
+        self.campaign_data['smtp_credentials'] = credentials
+        
+        # Update config settings with validated credentials for the session
+        try:
+            from config.settings import SMTP_SETTINGS
+            SMTP_SETTINGS.update(credentials)
+        except Exception as e:
+            print(f"Warning: Could not update SMTP settings: {e}")
+        
+        # Proceed to upload screen
+        self.show_upload_screen()
+        
     def on_upload_next(self):
         """Handle transition from upload to compose screen"""
         # Get upload data from the upload screen
@@ -470,6 +518,10 @@ class MainWindow(QMainWindow):
         # Pass contact data to compose screen
         if hasattr(self.compose_screen, 'set_contact_data'):
             self.compose_screen.set_contact_data(upload_data)
+            
+        # Refresh SMTP settings in compose screen
+        if hasattr(self.compose_screen, 'refresh_smtp_settings'):
+            self.compose_screen.refresh_smtp_settings()
             
         self.show_compose_screen()
         
@@ -506,7 +558,7 @@ class MainWindow(QMainWindow):
     # Application management
     def new_campaign(self):
         """Start a new campaign"""
-        if self.current_screen_index != self.SCREEN_UPLOAD:
+        if self.current_screen_index != self.SCREEN_LOGIN:
             reply = ThemedMessageBox.question(
                 self, 'New Campaign',
                 'Are you sure you want to start a new campaign? Any unsaved progress will be lost.',
@@ -515,9 +567,10 @@ class MainWindow(QMainWindow):
             )
             if reply == QMessageBox.Yes:
                 self.campaign_data.clear()
-                self.show_upload_screen()
+                self.smtp_credentials = None
+                self.show_login_screen()
         else:
-            self.show_upload_screen()
+            self.show_login_screen()
     
     def close_application(self):
         """Handle application close request"""
@@ -585,6 +638,7 @@ class MainWindow(QMainWindow):
     def get_current_screen_name(self):
         """Get the name of the current screen"""
         screen_names = {
+            self.SCREEN_LOGIN: "login",
             self.SCREEN_UPLOAD: "upload",
             self.SCREEN_COMPOSE: "compose", 
             self.SCREEN_PREVIEW: "preview",
@@ -596,6 +650,10 @@ class MainWindow(QMainWindow):
     def get_campaign_data(self):
         """Get the current campaign data"""
         return self.campaign_data.copy()
+    
+    def get_smtp_credentials(self) -> Dict[str, str]:
+        """Get the validated SMTP credentials"""
+        return self.smtp_credentials or {}
     
     def set_campaign_data(self, data):
         """Set campaign data (useful for testing)"""
