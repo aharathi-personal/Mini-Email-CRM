@@ -23,10 +23,11 @@ from PyQt5.QtGui import QFont, QTextCursor
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUCCESS_BUTTON_STYLE, ERROR_BUTTON_STYLE,
     CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE, BODY_STYLE,
-    SUCCESS_BADGE_STYLE, ERROR_BADGE_STYLE,
-    PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, LIGHT_GREY, 
-    BORDER_GREY, WARNING_ORANGE, DARK_GREY, FONT_SIZE_SMALL
+    SUCCESS_BADGE_STYLE, ERROR_BADGE_STYLE, FONT_SIZE_SMALL
 )
+
+# Import ThemedWidget for theme support
+from ui.base.themed_widgets import ThemedWidget
 
 # Import EmailService for actual email sending
 from core.email_service import EmailService
@@ -35,7 +36,7 @@ from core.email_service import EmailService
 from core.theme_manager import ThemeManager
 
 
-class ProgressScreen(QWidget):
+class ProgressScreen(ThemedWidget):
     """
     Enhanced Progress Screen - Step 4 of 4
     Task 18: Email sending progress with real-time updates and attachment info
@@ -96,7 +97,358 @@ class ProgressScreen(QWidget):
         
         self.setup_ui()
         self.connect_signals()
+    
+    def get_current_theme(self) -> dict:
+        """Get the current theme configuration with safe fallback"""
+        if not hasattr(self, 'theme_manager') or self.theme_manager is None:
+            # Provide safe fallback during initialization
+            return {
+                'background': '#ffffff',
+                'surface': '#f5f5f5', 
+                'surface_elevated': '#f8f8f8',
+                'surface_hover': '#e8f4fd',
+                'primary': '#0066cc',
+                'text_primary': '#000000',
+                'text_secondary': '#666666',
+                'border': '#cccccc',
+                'success': '#28a745',
+                'error': '#dc3545',
+                'warning': '#ffc107'
+            }
+        theme = self.theme_manager.get_theme()
+        # Ensure all required keys exist
+        required_keys = ['background', 'surface', 'surface_elevated', 'surface_hover', 'primary', 'text_primary', 'text_secondary', 'border', 'success', 'error', 'warning']
+        for key in required_keys:
+            if key not in theme:
+                theme[key] = '#cccccc'  # Default fallback
+        return theme
+    
+    def apply_theme_customizations(self):
+        """Apply theme-aware colors to all UI elements"""
+        theme = self.get_current_theme()
         
+        # Update navigation buttons
+        if hasattr(self, 'prev_contact_btn'):
+            self._update_navigation_button_style(self.prev_contact_btn)
+        if hasattr(self, 'next_contact_btn'):
+            self._update_navigation_button_style(self.next_contact_btn)
+        
+        # Update all themed buttons
+        if hasattr(self, 'themed_buttons'):
+            for button_info in self.themed_buttons:
+                button, button_type = button_info
+                if hasattr(button, 'isVisible') and button.isVisible():
+                    self._apply_button_theme(button, button_type)
+        
+        # Update all hardcoded colors with theme-aware colors
+        self._apply_theme_to_hardcoded_elements()
+    
+    def _update_navigation_button_style(self, button):
+        """Update navigation button style with current theme"""
+        theme = self.get_current_theme()
+        button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {theme['surface_container']};
+                color: {theme['text_primary']};
+                border: 1px solid {theme['border']};
+                padding: 8px 14px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-family: Arial, Helvetica, sans-serif;
+                font-weight: 500;
+                min-width: 70px;
+            }}
+            QPushButton:hover {{
+                background-color: {theme['hover_overlay']};
+                border-color: {theme['primary']};
+            }}
+            QPushButton:disabled {{
+                color: {theme['text_disabled']};
+                background-color: {theme['disabled_background']};
+                border-color: {theme['disabled']};
+            }}
+        """)
+        
+    def _apply_theme_to_hardcoded_elements(self):
+        """Apply theme-aware colors to all hardcoded elements in the UI"""
+        theme = self.get_current_theme()
+        
+        # Update progress label
+        if hasattr(self, 'progress_label'):
+            self.progress_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: {theme['text_primary']};
+                    text-align: center;
+                    background-color: transparent;
+                    border: none;
+                }}
+            """)
+        
+        # Update percentage label
+        if hasattr(self, 'percentage_label'):
+            self.percentage_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 12px;
+                    color: {theme['text_primary']};
+                    text-align: center;
+                    font-weight: bold;
+                }}
+            """)
+        
+        # Update status section
+        if hasattr(self, 'status_section'):
+            self.status_section.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {theme['surface_container']};
+                    border: 1px solid {theme['border']};
+                    border-radius: 6px;
+                    padding: 12px;
+                }}
+            """)
+        
+        # Update current email label
+        if hasattr(self, 'current_email_label'):
+            self.current_email_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 13px;
+                    color: {theme['text_primary']};
+                    font-weight: 500;
+                    text-align: center;
+                    background-color: transparent;
+                    border: none;
+                }}
+            """)
+        
+        # Update time remaining label
+        if hasattr(self, 'time_remaining_label'):
+            self.time_remaining_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 11px;
+                    color: {theme['text_secondary']};
+                    text-align: center;
+                }}
+            """)
+        
+        # Update counters section frames
+        if hasattr(self, 'success_frame'):
+            self.success_frame.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {theme['surface_container']};
+                    border: 1px solid {theme['border']};
+                    border-radius: 6px;
+                    padding: 12px;
+                }}
+            """)
+        
+        if hasattr(self, 'failed_frame'):
+            self.failed_frame.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {theme['surface_container']};
+                    border: 1px solid {theme['border']};
+                    border-radius: 6px;
+                    padding: 12px;
+                }}
+            """)
+        
+        # Update success badge text
+        if hasattr(self, 'success_badge'):
+            self.success_badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {theme['success']};
+                    color: white;
+                    border-radius: 12px;
+                    padding: 4px 8px;
+                    font-size: 12px;
+                    font-weight: bold;
+                    min-width: 20px;
+                    text-align: center;
+                }}
+            """)
+        
+        # Update failed badge text
+        if hasattr(self, 'failed_badge'):
+            self.failed_badge.setStyleSheet(f"""
+                QLabel {{
+                    background-color: {theme['error']};
+                    color: white;
+                    border-radius: 12px;
+                    padding: 4px 8px;
+                    font-size: 12px;
+                    font-weight: bold;
+                    min-width: 20px;
+                    text-align: center;
+                }}
+            """)
+        
+        # Update success text
+        if hasattr(self, 'success_text'):
+            self.success_text.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: {theme['text_primary']};
+                }}
+            """)
+        
+        # Update failed text
+        if hasattr(self, 'failed_text'):
+            self.failed_text.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: {theme['text_primary']};
+                }}
+            """)
+        
+        # Update attachment progress section
+        if hasattr(self, 'attachment_progress_section'):
+            self.attachment_progress_section.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {theme['surface_container']};
+                    border: 1px solid {theme['primary']};
+                    border-radius: 6px;
+                    padding: 10px;
+                }}
+            """)
+        
+        # Update attachment progress label
+        if hasattr(self, 'attachment_progress_label'):
+            self.attachment_progress_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 11px;
+                    color: {theme['primary']};
+                    font-weight: bold;
+                    text-align: center;
+                }}
+            """)
+        
+        # Update attachment errors label
+        if hasattr(self, 'attachment_errors_label'):
+            self.attachment_errors_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 10px;
+                    color: {theme['error']};
+                    text-align: center;
+                }}
+            """)
+        
+        # Update log section
+        if hasattr(self, 'log_section'):
+            self.log_section.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {theme['surface']};
+                    border: 1px solid {theme['border']};
+                    border-radius: 6px;
+                    padding: 5px;
+                }}
+            """)
+        
+        # Update log area
+        if hasattr(self, 'log_area'):
+            self.log_area.setStyleSheet(f"""
+                QTextEdit {{
+                    border: none;
+                    background-color: {theme['surface_elevated']};
+                    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+                    font-size: 10px;
+                    color: {theme['text_primary']};
+                    border-radius: 4px;
+                    padding: 8px;
+                }}
+            """)
+        
+        # Update campaign status label (dynamic based on state)
+        if hasattr(self, 'campaign_status_label'):
+            # This will be updated dynamically in other methods, but set a default theme-aware style
+            self.campaign_status_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme['primary']};
+                    font-size: 14px;
+                    font-weight: bold;
+                    padding: 6px 12px;
+                    background-color: {theme['surface_container']};
+                    border-radius: 4px;
+                    border: 1px solid {theme['primary']};
+                }}
+            """)
+        
+        # Update attachment info label
+        if hasattr(self, 'attachment_info_label'):
+            self.attachment_info_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme['text_primary']};
+                    font-size: 12px;
+                    font-weight: 500;
+                    padding: 4px 8px;
+                    background-color: {theme['surface_container']};
+                    border-radius: 4px;
+                }}
+            """)
+        
+        # Update processed label
+        if hasattr(self, 'processed_label'):
+            self.processed_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 10px;
+                    color: {theme['text_primary']};
+                    font-weight: bold;
+                    padding: 4px 8px;
+                    background-color: {theme['surface_elevated']};
+                    border-radius: 3px;
+                }}
+            """)
+        
+        # Update attachment failures label
+        if hasattr(self, 'attachment_failures_label'):
+            self.attachment_failures_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 10px;
+                    color: {theme['warning']};
+                    font-weight: bold;
+                    padding: 4px 8px;
+                    background-color: {theme['surface_elevated']};
+                    border-radius: 3px;
+                }}
+            """)
+        
+        # Update auto-scroll button (dynamic based on state)
+        if hasattr(self, 'auto_scroll_btn'):
+            # This will be updated dynamically in toggle_auto_scroll, but set a default
+            self.auto_scroll_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {theme['success']};
+                    color: white;
+                    border: none;
+                    padding: 4px 8px;
+                    border-radius: 3px;
+                    font-size: 9px;
+                    font-weight: bold;
+                    min-width: 80px;
+                }}
+                QPushButton:hover {{
+                    background-color: #388E3C;
+                }}
+            """)
+        
+        # Update clear log button
+        if hasattr(self, 'clear_log_btn'):
+            self.clear_log_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {theme['surface_elevated']};
+                    color: {theme['text_primary']};
+                    border: 1px solid {theme['border']};
+                    padding: 4px 8px;
+                    border-radius: 3px;
+                    font-size: 9px;
+                    min-width: 60px;
+                }}
+                QPushButton:hover {{
+                    background-color: {theme['surface_hover']};
+                }}
+            """)
+    
     def setup_ui(self):
         """Set up the progress screen UI"""
         main_layout = QVBoxLayout()
@@ -133,35 +485,24 @@ class ProgressScreen(QWidget):
         self.setLayout(main_layout)
         
     def create_header(self):
-        """Create header with campaign timestamp and step indicator"""
-        layout = QVBoxLayout()
-        layout.setSpacing(8)
+        """Create the header section with campaign info and status"""
+        header_layout = QVBoxLayout()
+        header_layout.setSpacing(8)
         
         # Step indicator
         step_layout = QHBoxLayout()
         
-        step_label = QLabel("Step 4 of 4: Sending Emails")
-        step_label.setStyleSheet(TITLE_STYLE)
+        step_label = self.create_themed_label("Step 4 of 4: Sending Emails", "title")
         step_layout.addWidget(step_label)
         
         step_layout.addStretch()
         
         # Campaign status
         self.campaign_status_label = QLabel("Campaign Ready")
-        self.campaign_status_label.setStyleSheet(f"""
-            QLabel {{
-                color: {PRIMARY_BLUE};
-                font-size: 14px;
-                font-weight: bold;
-                padding: 6px 12px;
-                background-color: #E3F2FD;
-                border-radius: 4px;
-                border: 1px solid {PRIMARY_BLUE};
-            }}
-        """)
+        # Theme styling will be applied in apply_theme_customizations()
         step_layout.addWidget(self.campaign_status_label)
         
-        layout.addLayout(step_layout)
+        header_layout.addLayout(step_layout)
         
         # Campaign timestamp
         timestamp_layout = QHBoxLayout()
@@ -174,20 +515,12 @@ class ProgressScreen(QWidget):
         
         # Attachment info summary
         self.attachment_info_label = QLabel("No attachments")
-        self.attachment_info_label.setStyleSheet(f"""
-            QLabel {{
-                color: {DARK_GREY};
-                font-size: 11px;
-                padding: 4px 8px;
-                background-color: #E3F2FD;
-                border-radius: 3px;
-            }}
-        """)
+        # Theme styling will be applied in apply_theme_customizations()
         timestamp_layout.addWidget(self.attachment_info_label)
         
-        layout.addLayout(timestamp_layout)
+        header_layout.addLayout(timestamp_layout)
         
-        return layout
+        return header_layout
         
     def create_progress_panel(self):
         """Create the left panel with progress display"""
@@ -220,25 +553,19 @@ class ProgressScreen(QWidget):
     def create_progress_section(self):
         """Create the main progress bar section"""
         section = QFrame()
-        section.setStyleSheet(f"""
-            QFrame {{
-                background-color: white;
-                border: 1px solid {BORDER_GREY};
-                border-radius: 6px;
-                padding: 15px;
-            }}
-        """)
+        # Theme styling will be applied in apply_theme_customizations()
         
         layout = QVBoxLayout()
         layout.setSpacing(12)
         
         # Progress label
         self.progress_label = QLabel("Preparing to send emails")
+        theme = self.get_current_theme()
         self.progress_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 14px;
                 font-weight: bold;
-                color: {DARK_GREY};
+                color: {theme['text_primary']};
                 text-align: center;
                 background-color: transparent;
                 border: none;
@@ -276,10 +603,11 @@ class ProgressScreen(QWidget):
         
         # Progress percentage
         self.percentage_label = QLabel("0%")
+        theme = self.get_current_theme()
         self.percentage_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 12px;
-                color: {theme_colors['text_primary']};
+                color: {theme['text_primary']};
                 text-align: center;
                 font-weight: bold;
             }}
@@ -292,11 +620,14 @@ class ProgressScreen(QWidget):
         
     def create_status_section(self):
         """Create the current status section"""
+        # Theme styling will be applied in apply_theme_customizations()
+        
         section = QFrame()
+        theme = self.get_current_theme()
         section.setStyleSheet(f"""
             QFrame {{
-                background-color: #FAFAFA;
-                border: 1px solid {BORDER_GREY};
+                background-color: {theme['surface_container']};
+                border: 1px solid {theme['border']};
                 border-radius: 6px;
                 padding: 12px;
             }}
@@ -307,10 +638,11 @@ class ProgressScreen(QWidget):
         
         # Current email
         self.current_email_label = QLabel("Ready to start sending")
+        theme = self.get_current_theme()
         self.current_email_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 13px;
-                color: {DARK_GREY};
+                color: {theme['text_primary']};
                 font-weight: 500;
                 text-align: center;
                 background-color: transparent;
@@ -323,10 +655,11 @@ class ProgressScreen(QWidget):
         
         # Time remaining
         self.time_remaining_label = QLabel("")
+        theme = self.get_current_theme()
         self.time_remaining_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 11px;
-                color: #666666;
+                color: {theme['text_secondary']};
                 text-align: center;
             }}
         """)
@@ -338,6 +671,8 @@ class ProgressScreen(QWidget):
         
     def create_counters_section(self):
         """Create the success/failed counters section"""
+        # Theme styling will be applied in apply_theme_customizations()
+        
         section = QFrame()
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -345,10 +680,11 @@ class ProgressScreen(QWidget):
         
         # Success counter
         success_frame = QFrame()
+        theme = self.get_current_theme()
         success_frame.setStyleSheet(f"""
             QFrame {{
-                background-color: white;
-                border: 1px solid {BORDER_GREY};
+                background-color: {theme['surface_container']};
+                border: 1px solid {theme['border']};
                 border-radius: 6px;
                 padding: 12px;
             }}
@@ -364,11 +700,12 @@ class ProgressScreen(QWidget):
         success_layout.addWidget(self.success_badge)
         
         success_text = QLabel("Success")
+        theme = self.get_current_theme()
         success_text.setStyleSheet(f"""
             QLabel {{
                 font-size: 14px;
                 font-weight: 500;
-                color: {DARK_GREY};
+                color: {theme['text_primary']};
             }}
         """)
         success_layout.addWidget(success_text)
@@ -378,10 +715,11 @@ class ProgressScreen(QWidget):
         
         # Failed counter
         failed_frame = QFrame()
+        theme = self.get_current_theme()
         failed_frame.setStyleSheet(f"""
             QFrame {{
-                background-color: white;
-                border: 1px solid {BORDER_GREY};
+                background-color: {theme['surface_container']};
+                border: 1px solid {theme['border']};
                 border-radius: 6px;
                 padding: 12px;
             }}
@@ -397,11 +735,12 @@ class ProgressScreen(QWidget):
         failed_layout.addWidget(self.failed_badge)
         
         failed_text = QLabel("Failed")
+        theme = self.get_current_theme()
         failed_text.setStyleSheet(f"""
             QLabel {{
                 font-size: 14px;
                 font-weight: 500;
-                color: {DARK_GREY};
+                color: {theme['text_primary']};
             }}
         """)
         failed_layout.addWidget(failed_text)
@@ -414,13 +753,16 @@ class ProgressScreen(QWidget):
         
     def create_attachment_progress_section(self):
         """Create attachment processing progress section"""
+        # Theme styling will be applied in apply_theme_customizations()
+        
         self.attachment_progress_section = QFrame()
         self.attachment_progress_section.setVisible(False)  # Hidden by default
         
+        theme = self.get_current_theme()
         self.attachment_progress_section.setStyleSheet(f"""
             QFrame {{
-                background-color: #E3F2FD;
-                border: 1px solid {PRIMARY_BLUE};
+                background-color: {theme['surface_container']};
+                border: 1px solid {theme['primary']};
                 border-radius: 6px;
                 padding: 10px;
             }}
@@ -431,10 +773,11 @@ class ProgressScreen(QWidget):
         
         # Attachment progress label
         self.attachment_progress_label = QLabel("Processing attachments...")
+        theme = self.get_current_theme()
         self.attachment_progress_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 11px;
-                color: {PRIMARY_BLUE};
+                color: {theme['primary']};
                 font-weight: bold;
                 text-align: center;
             }}
@@ -444,10 +787,11 @@ class ProgressScreen(QWidget):
         
         # Attachment errors counter
         self.attachment_errors_label = QLabel("")
+        theme = self.get_current_theme()
         self.attachment_errors_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 10px;
-                color: {ERROR_RED};
+                color: {theme['error']};
                 text-align: center;
             }}
         """)
@@ -483,6 +827,9 @@ class ProgressScreen(QWidget):
         
     def create_log_statistics(self):
         """Create log statistics display"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         layout = QHBoxLayout()
         layout.setSpacing(10)
         
@@ -491,10 +838,10 @@ class ProgressScreen(QWidget):
         self.processed_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 10px;
-                color: {DARK_GREY};
+                color: {theme['text_primary']};
                 font-weight: bold;
                 padding: 4px 8px;
-                background-color: {LIGHT_GREY};
+                background-color: {theme['surface_elevated']};
                 border-radius: 3px;
             }}
         """)
@@ -507,10 +854,10 @@ class ProgressScreen(QWidget):
         self.attachment_failures_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 10px;
-                color: {WARNING_ORANGE};
+                color: {theme['warning']};
                 font-weight: bold;
                 padding: 4px 8px;
-                background-color: #FFF3E0;
+                background-color: {theme['surface_elevated']};
                 border-radius: 3px;
             }}
         """)
@@ -520,11 +867,15 @@ class ProgressScreen(QWidget):
         
     def create_log_section(self):
         """Create the scrollable log section"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         section = QFrame()
+        theme = self.get_current_theme()
         section.setStyleSheet(f"""
             QFrame {{
-                background-color: white;
-                border: 1px solid {BORDER_GREY};
+                background-color: {theme['surface']};
+                border: 1px solid {theme['border']};
                 border-radius: 6px;
                 padding: 5px;
             }}
@@ -538,10 +889,10 @@ class ProgressScreen(QWidget):
         self.log_area.setStyleSheet(f"""
             QTextEdit {{
                 border: none;
-                background-color: #FAFAFA;
+                background-color: {theme['surface_elevated']};
                 font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
                 font-size: 10px;
-                color: {DARK_GREY};
+                color: {theme['text_primary']};
                 border-radius: 4px;
                 padding: 8px;
             }}
@@ -556,6 +907,9 @@ class ProgressScreen(QWidget):
         
     def create_log_controls(self):
         """Create log control buttons"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         layout = QHBoxLayout()
         layout.setSpacing(8)
         
@@ -565,7 +919,7 @@ class ProgressScreen(QWidget):
         self.auto_scroll_btn.clicked.connect(self.toggle_auto_scroll)
         self.auto_scroll_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: {SUCCESS_GREEN};
+                background-color: {theme['success']};
                 color: white;
                 border: none;
                 padding: 4px 8px;
@@ -575,7 +929,7 @@ class ProgressScreen(QWidget):
                 min-width: 80px;
             }}
             QPushButton:hover {{
-                background-color: #388E3C;
+                background-color: {theme['success_hover']};
             }}
         """)
         layout.addWidget(self.auto_scroll_btn)
@@ -587,16 +941,16 @@ class ProgressScreen(QWidget):
         clear_log_btn.clicked.connect(self.clear_log)
         clear_log_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: {LIGHT_GREY};
-                color: {DARK_GREY};
-                border: 1px solid {BORDER_GREY};
+                background-color: {theme['surface_elevated']};
+                color: {theme['text_primary']};
+                border: 1px solid {theme['border']};
                 padding: 4px 8px;
                 border-radius: 3px;
                 font-size: 9px;
                 min-width: 60px;
             }}
             QPushButton:hover {{
-                background-color: #EEEEEE;
+                background-color: {theme['surface_hover']};
             }}
         """)
         layout.addWidget(clear_log_btn)
@@ -605,32 +959,36 @@ class ProgressScreen(QWidget):
         
     def create_controls(self):
         """Create control buttons section"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         layout = QHBoxLayout()
         layout.setSpacing(15)
         
         # Pause/Resume button
         self.pause_button = QPushButton("Pause Sending")
         self.pause_button.clicked.connect(self.on_pause_clicked)
+        theme = self.get_current_theme()
         self.pause_button.setStyleSheet(f"""
             QPushButton {{
-                background-color: {WARNING_ORANGE};
+                background-color: {theme['warning']};
                 color: white;
                 border: none;
                 padding: 12px 20px;
                 border-radius: 6px;
                 font-weight: bold;
-                font-size: {FONT_SIZE_SMALL};
+                font-size: 12px;
                 min-width: 120px;
             }}
             QPushButton:hover {{
-                background-color: #F57C00;
+                background-color: {theme['warning_hover']};
             }}
             QPushButton:pressed {{
-                background-color: #E65100;
+                background-color: {theme['warning_pressed']};
             }}
             QPushButton:disabled {{
-                background-color: #CCCCCC;
-                color: #888888;
+                background-color: {theme['disabled']};
+                color: {theme['text_disabled']};
             }}
         """)
         layout.addWidget(self.pause_button)
@@ -644,9 +1002,13 @@ class ProgressScreen(QWidget):
         layout.addStretch()
         
         # Exit button
-        self.exit_button = QPushButton("Exit")
+        self.exit_button = self.create_themed_button("Exit", "error")
         self.exit_button.clicked.connect(self.on_exit_clicked)
-        self.exit_button.setStyleSheet(BUTTON_STYLE)
+        
+        # Store for theme updates
+        if not hasattr(self, 'themed_buttons'):
+            self.themed_buttons = []
+        self.themed_buttons.append((self.exit_button, "error"))
         layout.addWidget(self.exit_button)
         
         return layout
@@ -698,34 +1060,37 @@ class ProgressScreen(QWidget):
     # Progress control methods
     def pause_sending(self):
         """Pause the sending process"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.is_paused = True
         self.pause_button.setText("Resume Sending")
         self.pause_button.setStyleSheet(f"""
             QPushButton {{
-                background-color: {SUCCESS_GREEN};
+                background-color: {theme['success']};
                 color: white;
                 border: none;
                 padding: 12px 20px;
                 border-radius: 6px;
                 font-weight: bold;
-                font-size: {FONT_SIZE_SMALL};
+                font-size: 12px;
                 min-width: 120px;
             }}
             QPushButton:hover {{
-                background-color: #388E3C;
+                background-color: {theme['success_hover']};
             }}
         """)
         
         self.campaign_status_label.setText("Campaign Paused")
         self.campaign_status_label.setStyleSheet(f"""
             QLabel {{
-                color: {WARNING_ORANGE};
+                color: {theme['warning']};
                 font-size: 14px;
                 font-weight: bold;
                 padding: 6px 12px;
-                background-color: #FFF3E0;
+                background-color: {theme['surface_container']};
                 border-radius: 4px;
-                border: 1px solid {WARNING_ORANGE};
+                border: 1px solid {theme['warning']};
             }}
         """)
         
@@ -738,34 +1103,37 @@ class ProgressScreen(QWidget):
         
     def resume_sending(self):
         """Resume the sending process"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.is_paused = False
         self.pause_button.setText("Pause Sending")
         self.pause_button.setStyleSheet(f"""
             QPushButton {{
-                background-color: {WARNING_ORANGE};
+                background-color: {theme['warning']};
                 color: white;
                 border: none;
                 padding: 12px 20px;
                 border-radius: 6px;
                 font-weight: bold;
-                font-size: {FONT_SIZE_SMALL};
+                font-size: 12px;
                 min-width: 120px;
             }}
             QPushButton:hover {{
-                background-color: #F57C00;
+                background-color: {theme['warning_hover']};
             }}
         """)
         
         self.campaign_status_label.setText("Campaign Active")
         self.campaign_status_label.setStyleSheet(f"""
             QLabel {{
-                color: {SUCCESS_GREEN};
+                color: {theme['success']};
                 font-size: 14px;
                 font-weight: bold;
                 padding: 6px 12px;
-                background-color: #E8F5E8;
+                background-color: {theme['surface_container']};
                 border-radius: 4px;
-                border: 1px solid {SUCCESS_GREEN};
+                border: 1px solid {theme['success']};
             }}
         """)
         
@@ -778,6 +1146,9 @@ class ProgressScreen(QWidget):
         
     def cancel_sending(self):
         """Cancel the remaining sends"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.is_cancelled = True
         self.pause_button.setEnabled(False)
         self.cancel_button.setEnabled(False)
@@ -785,13 +1156,13 @@ class ProgressScreen(QWidget):
         self.campaign_status_label.setText("Campaign Cancelled")
         self.campaign_status_label.setStyleSheet(f"""
             QLabel {{
-                color: {ERROR_RED};
+                color: {theme['error']};
                 font-size: 14px;
                 font-weight: bold;
                 padding: 6px 12px;
-                background-color: #FFEBEE;
+                background-color: {theme['surface_container']};
                 border-radius: 4px;
-                border: 1px solid {ERROR_RED};
+                border: 1px solid {theme['error']};
             }}
         """)
         
@@ -806,6 +1177,9 @@ class ProgressScreen(QWidget):
     # Progress update methods
     def start_campaign(self, campaign_data):
         """Start the email campaign with provided data"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.campaign_data = campaign_data
         self.contacts = campaign_data.get('contacts', [])
         self.attachments = campaign_data.get('attachments', [])
@@ -834,13 +1208,13 @@ class ProgressScreen(QWidget):
         self.campaign_status_label.setText("Campaign Active")
         self.campaign_status_label.setStyleSheet(f"""
             QLabel {{
-                color: {SUCCESS_GREEN};
+                color: {theme['success']};
                 font-size: 14px;
                 font-weight: bold;
                 padding: 6px 12px;
-                background-color: #E8F5E8;
+                background-color: {theme['surface_container']};
                 border-radius: 4px;
-                border: 1px solid {SUCCESS_GREEN};
+                border: 1px solid {theme['success']};
             }}
         """)
         
@@ -961,17 +1335,23 @@ class ProgressScreen(QWidget):
     # Logging methods
     def log_success(self, email, attachment_info=""):
         """Log a successful email send"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.success_count += 1
-        self.log_entry(f"✅ Sent to {email}", SUCCESS_GREEN)
+        self.log_entry(f"✅ Sent to {email}", theme['success'])
         
         if attachment_info:
-            self.log_entry(f"   📎 {attachment_info}", "#666666")
+            self.log_entry(f"   📎 {attachment_info}", theme['text_secondary'])
         
         self.update_counters()
         self.email_sent.emit(email, True)
         
     def log_failure(self, email, reason, is_attachment_issue=False):
         """Log a failed email send"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.failed_count += 1
         
         # Add email to failed emails list for CSV export
@@ -979,25 +1359,31 @@ class ProgressScreen(QWidget):
         
         if is_attachment_issue:
             self.attachment_failures += 1
-            self.log_entry(f"❌ Failed to send to {email} - {reason}", ERROR_RED)
-            self.log_entry(f"   📎 Attachment processing error", WARNING_ORANGE)
+            self.log_entry(f"❌ Failed to send to {email} - {reason}", theme['error'])
+            self.log_entry(f"   📎 Attachment processing error", theme['warning'])
         else:
-            self.log_entry(f"❌ Failed to send to {email} - {reason}", ERROR_RED)
+            self.log_entry(f"❌ Failed to send to {email} - {reason}", theme['error'])
         
         self.update_counters()
         self.email_sent.emit(email, False)
         
     def log_attachment_info(self, info):
         """Log attachment-specific information"""
-        self.log_entry(f"📎 {info}", PRIMARY_BLUE)
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        self.log_entry(f"📎 {info}", theme['primary'])
         
     def log_info(self, message):
         """Log an info message"""
-        self.log_entry(f"ℹ️ {message}", PRIMARY_BLUE)
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        self.log_entry(f"ℹ️ {message}", theme['primary'])
         
     def log_warning(self, message):
         """Log a warning message"""
-        self.log_entry(f"⚠️ {message}", WARNING_ORANGE)
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        self.log_entry(f"⚠️ {message}", theme['warning'])
         
     def log_entry(self, message, color="#333333"):
         """Add an entry to the log with timestamp"""
@@ -1016,13 +1402,16 @@ class ProgressScreen(QWidget):
     # Log control methods
     def toggle_auto_scroll(self):
         """Toggle auto-scroll functionality"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.auto_scroll_enabled = not self.auto_scroll_enabled
         
         if self.auto_scroll_enabled:
             self.auto_scroll_btn.setText("Auto-scroll: ON")
             self.auto_scroll_btn.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: {SUCCESS_GREEN};
+                    background-color: {theme['success']};
                     color: white;
                     border: none;
                     padding: 4px 8px;
@@ -1032,16 +1421,16 @@ class ProgressScreen(QWidget):
                     min-width: 80px;
                 }}
                 QPushButton:hover {{
-                    background-color: #388E3C;
+                    background-color: {theme['success_hover']};
                 }}
             """)
         else:
             self.auto_scroll_btn.setText("Auto-scroll: OFF")
             self.auto_scroll_btn.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: {LIGHT_GREY};
-                    color: {DARK_GREY};
-                    border: 1px solid {BORDER_GREY};
+                    background-color: {theme['surface_elevated']};
+                    color: {theme['text_primary']};
+                    border: 1px solid {theme['border']};
                     padding: 4px 8px;
                     border-radius: 3px;
                     font-size: 9px;
@@ -1049,7 +1438,7 @@ class ProgressScreen(QWidget):
                     min-width: 80px;
                 }}
                 QPushButton:hover {{
-                    background-color: #EEEEEE;
+                    background-color: {theme['surface_hover']};
                 }}
             """)
             
@@ -1060,6 +1449,9 @@ class ProgressScreen(QWidget):
     # Campaign completion methods
     def complete_campaign(self):
         """Mark campaign as complete"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.is_completed = True
         self.current_progress = self.total_emails
         self.progress_bar.setValue(self.total_emails)
@@ -1068,13 +1460,13 @@ class ProgressScreen(QWidget):
         self.campaign_status_label.setText("Campaign Completed")
         self.campaign_status_label.setStyleSheet(f"""
             QLabel {{
-                color: {SUCCESS_GREEN};
+                color: {theme['success']};
                 font-size: 14px;
                 font-weight: bold;
                 padding: 6px 12px;
-                background-color: #E8F5E8;
+                background-color: {theme['surface_container']};
                 border-radius: 4px;
-                border: 1px solid {SUCCESS_GREEN};
+                border: 1px solid {theme['success']};
             }}
         """)
         
@@ -1372,6 +1764,9 @@ class ProgressScreen(QWidget):
         
     def reset_progress(self):
         """Reset all progress tracking"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.campaign_data = {}
         self.contacts = []
         self.attachments = []
@@ -1409,13 +1804,13 @@ class ProgressScreen(QWidget):
         self.campaign_status_label.setText("Campaign Ready")
         self.campaign_status_label.setStyleSheet(f"""
             QLabel {{
-                color: {PRIMARY_BLUE};
+                color: {theme['primary']};
                 font-size: 14px;
                 font-weight: bold;
                 padding: 6px 12px;
-                background-color: #E3F2FD;
+                background-color: {theme['surface_container']};
                 border-radius: 4px;
-                border: 1px solid {PRIMARY_BLUE};
+                border: 1px solid {theme['primary']};
             }}
         """)
         

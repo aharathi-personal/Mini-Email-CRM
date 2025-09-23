@@ -29,12 +29,10 @@ from models.attachment import Attachment, AttachmentType
 # Import new theme system
 from ui.base.themed_widgets import ThemedWidget, get_current_theme_colors, apply_button_style
 
-# Import legacy styles for backward compatibility during transition
+# Import styles for button consistency
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUCCESS_BUTTON_STYLE, ERROR_BUTTON_STYLE,
-    INPUT_STYLE, CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE, BODY_STYLE,
-    PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, LIGHT_GREY, BORDER_GREY,
-    WARNING_ORANGE, DARK_GREY
+    INPUT_STYLE, CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE
 )
 
 
@@ -100,9 +98,6 @@ class PreviewScreen(ThemedWidget):
         
         if hasattr(self, 'next_contact_btn'):
             self._update_navigation_button_style(self.next_contact_btn)
-        
-        # Update all hardcoded colors with theme-aware colors
-        self._apply_theme_to_hardcoded_elements()
     
     def _update_navigation_button_style(self, button):
         """Update navigation button style with current theme"""
@@ -129,317 +124,6 @@ class PreviewScreen(ThemedWidget):
                 border-color: {theme['disabled']};
             }}
         """)
-        
-    def _apply_theme_to_hardcoded_elements(self):
-        """Apply theme-aware colors to all hardcoded elements in the UI"""
-        theme = self.get_current_theme()
-        
-        # Update contact list panel background and colors
-        if hasattr(self, 'contact_list_panel'):
-            self.contact_list_panel.setStyleSheet(f"""
-                QGroupBox {{
-                    font-weight: 600;
-                    font-size: 13px;
-                    border: 1px solid {theme['border']};
-                    border-radius: 6px;
-                    margin-top: 10px;
-                    padding-top: 16px;
-                    background-color: {theme['surface']};
-                    color: {theme['text_primary']};
-                }}
-                QGroupBox::title {{
-                    subcontrol-origin: margin;
-                    left: 12px;
-                    padding: 0 8px 0 8px;
-                    color: {theme['text_primary']};
-                    background-color: {theme['surface']};
-                    font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                }}
-            """)
-        
-        # Update contact count label
-        if hasattr(self, 'contact_count_label'):
-            self.contact_count_label.setStyleSheet(f"""
-                QLabel {{
-                    font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                    font-size: 12px;
-                    font-weight: 500;
-                    color: {theme['text_secondary']};
-                    margin-bottom: 4px;
-                }}
-            """)
-        
-        # Update contact list widget
-        if hasattr(self, 'contact_list'):
-            self.contact_list.setStyleSheet(f"""
-                QListWidget {{
-                    border: 1px solid {theme['border']};
-                    border-radius: 6px;
-                    background-color: {theme['surface']};
-                    selection-background-color: {theme['primary']};
-                    selection-color: {theme['text_on_primary']};
-                    font-size: 12px;
-                    font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
-                    min-height: 300px;
-                    outline: none;
-                }}
-                QListWidget::item {{
-                    padding: 12px 16px;
-                    border-bottom: 1px solid {theme['divider']};
-                    color: {theme['text_primary']};
-                    margin: 0px;
-                }}
-                QListWidget::item:last {{
-                    border-bottom: none;
-                }}
-                QListWidget::item:hover {{
-                    background-color: {theme['hover_overlay']};
-                }}
-                QListWidget::item:selected {{
-                    background-color: {theme['primary']};
-                    color: {theme['text_on_primary']};
-                    border-bottom: 1px solid {theme['primary']};
-                }}
-            """)
-        
-        # Update search section label
-        if hasattr(self, 'search_label'):
-            self.search_label.setStyleSheet(f"""
-                QLabel {{
-                    font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: {theme['text_primary']};
-                    margin-bottom: 2px;
-                }}
-            """)
-        
-        # Update search input
-        if hasattr(self, 'search_input'):
-            self.search_input.setStyleSheet(f"""
-                QLineEdit {{
-                    border: 1px solid {theme['border']};
-                    border-radius: 6px;
-                    padding: 10px 12px;
-                    font-size: 12px;
-                    font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
-                    background-color: {theme['surface']};
-                    color: {theme['text_primary']};
-                    selection-background-color: {theme['primary']};
-                }}
-                QLineEdit:focus {{
-                    border-color: {theme['primary']};
-                    background-color: {theme['surface_container']};
-                }}
-                QLineEdit::placeholder {{
-                    color: {theme['text_hint']};
-                }}
-            """)
-        
-        # Update position label
-        if hasattr(self, 'position_label'):
-            self.position_label.setStyleSheet(f"""
-                QLabel {{
-                    color: {theme['text_secondary']};
-                    font-size: 11px;
-                    font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
-                    font-weight: 500;
-                    padding: 8px 12px;
-                    text-align: center;
-                    background-color: {theme['surface_container']};
-                    border-radius: 6px;
-                    min-width: 50px;
-                }}
-            """)
-        
-        # Update email preview panel
-        if hasattr(self, 'email_preview_panel'):
-            self.email_preview_panel.setStyleSheet(f"""
-                QGroupBox {{
-                    font-weight: 600;
-                    font-size: 13px;
-                    border: 1px solid {theme['border']};
-                    border-radius: 6px;
-                    margin-top: 10px;
-                    padding-top: 16px;
-                    background-color: {theme['surface']};
-                    color: {theme['text_primary']};
-                }}
-                QGroupBox::title {{
-                    subcontrol-origin: margin;
-                    left: 12px;
-                    padding: 0 8px 0 8px;
-                    color: {theme['text_primary']};
-                    background-color: {theme['surface']};
-                    font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                }}
-            """)
-        
-        # Update email headers section
-        if hasattr(self, 'headers_section'):
-            self.headers_section.setStyleSheet(f"""
-                QFrame {{
-                    background-color: {theme['surface_container']};
-                    border: 1px solid {theme['border']};
-                    border-radius: 6px;
-                    padding: 16px;
-                    margin-bottom: 8px;
-                }}
-            """)
-        
-        # Update header labels
-        if hasattr(self, 'to_label'):
-            self.to_label.setStyleSheet(f"""
-                QLabel {{
-                    font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                    font-size: 12px;
-                    color: {theme['text_primary']};
-                    font-weight: 600;
-                    padding: 2px 0px;
-                }}
-            """)
-        
-        if hasattr(self, 'from_label'):
-            self.from_label.setStyleSheet(f"""
-                QLabel {{
-                    font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                    font-size: 12px;
-                    color: {theme['text_secondary']};
-                    padding: 2px 0px;
-                }}
-            """)
-        
-        if hasattr(self, 'subject_label'):
-            self.subject_label.setStyleSheet(f"""
-                QLabel {{
-                    font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                    font-size: 12px;
-                    color: {theme['text_secondary']};
-                    padding: 2px 0px;
-                }}
-            """)
-        
-        # Update content section
-        if hasattr(self, 'content_section'):
-            self.content_section.setStyleSheet(f"""
-                QGroupBox {{
-                    font-weight: 600;
-                    font-size: 13px;
-                    border: 1px solid {theme['border']};
-                    border-radius: 6px;
-                    margin-top: 10px;
-                    padding-top: 16px;
-                    background-color: {theme['surface']};
-                    color: {theme['text_primary']};
-                }}
-                QGroupBox::title {{
-                    subcontrol-origin: margin;
-                    left: 12px;
-                    padding: 0 8px 0 8px;
-                    color: {theme['text_primary']};
-                    background-color: {theme['surface']};
-                    font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                }}
-            """)
-        
-        # Update content scroll area
-        if hasattr(self, 'content_scroll_area'):
-            self.content_scroll_area.setStyleSheet(f"""
-                QScrollArea {{
-                    background-color: {theme['surface_container']};
-                    border: 1px solid {theme['border']};
-                    border-radius: 8px;
-                    margin: 4px;
-                }}
-                QScrollBar:vertical {{
-                    background-color: {theme['surface_container']};
-                    width: 8px;
-                    border-radius: 4px;
-                    margin: 0px;
-                }}
-                QScrollBar::handle:vertical {{
-                    background-color: {theme['scrollbar_handle']};
-                    border-radius: 4px;
-                    min-height: 20px;
-                }}
-                QScrollBar::handle:vertical:hover {{
-                    background-color: {theme['scrollbar_handle_hover']};
-                }}
-                QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
-                    height: 0px;
-                }}
-            """)
-        
-        # Update content preview text edit
-        if hasattr(self, 'content_preview'):
-            self.content_preview.setStyleSheet(f"""
-                QTextEdit {{
-                    border: 1px solid {theme['border']};
-                    border-radius: 6px;
-                    background-color: {theme['surface']};
-                    font-size: 12px;
-                    font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
-                    color: {theme['text_primary']};
-                    padding: 12px;
-                    line-height: 1.4;
-                }}
-                QTextEdit:focus {{
-                    border-color: {theme['primary']};
-                    background-color: {theme['surface']};
-                }}
-            """)
-        
-        # Update attachments section
-        if hasattr(self, 'attachments_section'):
-            self.attachments_section.setStyleSheet(f"""
-                QGroupBox {{
-                    font-weight: 600;
-                    font-size: 13px;
-                    border: 1px solid {theme['border']};
-                    border-radius: 6px;
-                    margin-top: 10px;
-                    padding-top: 16px;
-                    background-color: {theme['surface_container']};
-                    color: {theme['text_primary']};
-                }}
-                QGroupBox::title {{
-                    subcontrol-origin: margin;
-                    left: 12px;
-                    padding: 0 8px 0 8px;
-                    color: {theme['text_primary']};
-                    background-color: {theme['surface_container']};
-                    font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                }}
-            """)
-        
-        # Update attachment list
-        if hasattr(self, 'attachment_list'):
-            self.attachment_list.setStyleSheet(f"""
-                QListWidget {{
-                    border: 1px solid {theme['border']};
-                    border-radius: 4px;
-                    background-color: {theme['surface']};
-                    font-size: 10px;
-                }}
-                QListWidget::item {{
-                    padding: 8px;
-                    border-bottom: 1px solid {theme['divider']};
-                    color: {theme['text_primary']};
-                }}
-            """)
-        
-        # Update warning message
-        if hasattr(self, 'warning_message'):
-            self.warning_message.setStyleSheet(f"""
-                QLabel {{
-                    color: {theme['error']};
-                    font-size: 11px;
-                    background-color: {theme['error_container']};
-                    border: 1px solid {theme['error']};
-                    border-radius: 4px;
-                    padding: 8px;
-                }}
-            """)
         
     def setup_ui(self):
         """Set up the preview screen UI"""
@@ -481,7 +165,8 @@ class PreviewScreen(ThemedWidget):
         layout = QHBoxLayout()
         
         # Step indicator
-        step_label = self.create_themed_label("Step 3 of 4: Preview Emails", "title")
+        step_label = QLabel("Step 3 of 4: Preview Emails")
+        step_label.setStyleSheet(TITLE_STYLE)
         layout.addWidget(step_label)
         
         # Spacer
@@ -497,32 +182,11 @@ class PreviewScreen(ThemedWidget):
     def create_contact_list_panel(self):
         """Create the left panel with contact list and search - matching compose screen styling"""
         panel = QGroupBox("Contacts")
-        # Use theme-aware colors
-        theme = self.get_current_theme()
-        panel.setStyleSheet(f"""
-            QGroupBox {{
-                font-weight: 600;
-                font-size: 13px;
-                border: 1px solid {theme['border']};
-                border-radius: 6px;
-                margin-top: 10px;
-                padding-top: 16px;
-                background-color: {theme['surface']};
-                color: {theme['text_primary']};
-            }}
-            QGroupBox::title {{
-                subcontrol-origin: margin;
-                left: 12px;
-                padding: 0 8px 0 8px;
-                color: {theme['text_primary']};
-                background-color: {theme['surface']};
-                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-            }}
-        """)
+        # Theme styling will be applied in apply_theme_customizations()
         
         layout = QVBoxLayout()
-        layout.setContentsMargins(16, 12, 16, 16)
-        layout.setSpacing(12)
+        layout.setContentsMargins(12, 8, 12, 12)
+        layout.setSpacing(8)
         
         # Search section
         search_layout = self.create_search_section()
@@ -530,51 +194,12 @@ class PreviewScreen(ThemedWidget):
         
         # Contact count (enhanced styling)
         self.contact_count_label = QLabel("0 contacts")
-        theme = self.get_current_theme()
-        self.contact_count_label.setStyleSheet(f"""
-            QLabel {{
-                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                font-size: 12px;
-                font-weight: 500;
-                color: {theme['text_secondary']};
-                margin-bottom: 4px;
-            }}
-        """)
+        # Theme styling will be applied in apply_theme_customizations()
         layout.addWidget(self.contact_count_label)
         
         # Contact list (enhanced styling matching compose screen aesthetics)
         self.contact_list = QListWidget()
-        theme = self.get_current_theme()
-        self.contact_list.setStyleSheet(f"""
-            QListWidget {{
-                border: 1px solid {theme['border']};
-                border-radius: 6px;
-                background-color: {theme['surface']};
-                selection-background-color: {theme['primary']};
-                selection-color: {theme['text_on_primary']};
-                font-size: 12px;
-                font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
-                min-height: 300px;
-                outline: none;
-            }}
-            QListWidget::item {{
-                padding: 12px 16px;
-                border-bottom: 1px solid {theme['divider']};
-                color: {theme['text_primary']};
-                margin: 0px;
-            }}
-            QListWidget::item:last {{
-                border-bottom: none;
-            }}
-            QListWidget::item:hover {{
-                background-color: {theme['hover_overlay']};
-            }}
-            QListWidget::item:selected {{
-                background-color: {theme['primary']};
-                color: {theme['text_on_primary']};
-                border-bottom: 1px solid {theme['primary']};
-            }}
-        """)
+        # Theme styling will be applied in apply_theme_customizations()
         
         # Connect contact selection
         self.contact_list.currentRowChanged.connect(self.on_contact_selected)
@@ -595,42 +220,14 @@ class PreviewScreen(ThemedWidget):
         
         # Search label (enhanced styling)
         search_label = QLabel("Search contacts:")
-        theme = self.get_current_theme()
-        search_label.setStyleSheet(f"""
-            QLabel {{
-                font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
-                font-size: 13px;
-                font-weight: 600;
-                color: {theme['text_primary']};
-                margin-bottom: 2px;
-            }}
-        """)
+        # Theme styling will be applied in apply_theme_customizations()
         layout.addWidget(search_label)
         
         # Search input (enhanced styling)
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Search by name or email...")
-        theme = self.get_current_theme()
-        self.search_input.setStyleSheet(f"""
-            QLineEdit {{
-                border: 1px solid {theme['border']};
-                border-radius: 6px;
-                padding: 10px 12px;
-                font-size: 12px;
-                font-family: 'SF Pro Text', 'Segoe UI', 'Arial', sans-serif;
-                background-color: {theme['surface']};
-                color: {theme['text_primary']};
-                selection-background-color: {theme['primary']};
-            }}
-            QLineEdit:focus {{
-                border-color: {theme['primary']};
-                background-color: {theme['surface_container']};
-            }}
-            QLineEdit::placeholder {{
-                color: {theme['text_placeholder']};
-            }}
-        """)
-        self.search_input.textChanged.connect(self.on_search_text_changed)
+        # Theme styling will be applied in apply_theme_customizations()
+        self.search_input.setPlaceholderText("Type to search...")
+        self.search_input.textChanged.connect(self.filter_contacts)
         layout.addWidget(self.search_input)
         
         return layout
@@ -643,12 +240,18 @@ class PreviewScreen(ThemedWidget):
         # Previous contact (enhanced styling)
         self.prev_contact_btn = QPushButton("◀ Previous")
         self.prev_contact_btn.clicked.connect(self.select_previous_contact)
-        theme = self.get_current_theme()
-        self.prev_contact_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {theme['surface_container']};
-                color: {theme['text_primary']};
-                border: 1px solid {theme['border']};
+        # Theme styling will be applied in apply_theme_customizations()
+        
+        # Next contact (enhanced styling)  
+        self.next_contact_btn = QPushButton("Next ▶")
+        self.next_contact_btn.clicked.connect(self.select_next_contact)
+        # Theme styling will be applied in apply_theme_customizations()
+        
+        layout.addWidget(self.prev_contact_btn)
+        layout.addStretch()
+        layout.addWidget(self.next_contact_btn)
+        
+        return layout
                 padding: 8px 14px;
                 border-radius: 6px;
                 font-size: 11px;
@@ -657,20 +260,19 @@ class PreviewScreen(ThemedWidget):
                 min-width: 70px;
             }}
             QPushButton:hover {{
-                background-color: {theme['hover_overlay']};
-                border-color: {theme['primary']};
+                background-color: {theme['button_secondary']};
+                border-color: {theme['border']};
             }}
             QPushButton:disabled {{
                 color: {theme['text_disabled']};
-                background-color: {theme['disabled_background']};
-                border-color: {theme['disabled']};
+                background-color: {theme['surface']};
+                border-color: {theme['border']};
             }}
         """)
         layout.addWidget(self.prev_contact_btn)
         
         # Contact position indicator (enhanced styling)
         self.position_label = QLabel("1 of 0")
-        theme = self.get_current_theme()
         self.position_label.setStyleSheet(f"""
             QLabel {{
                 color: {theme['text_secondary']};
@@ -679,7 +281,7 @@ class PreviewScreen(ThemedWidget):
                 font-weight: 500;
                 padding: 8px 12px;
                 text-align: center;
-                background-color: {theme['surface_container']};
+                background-color: {theme['surface_elevated']};
                 border-radius: 6px;
                 min-width: 50px;
             }}
@@ -689,10 +291,9 @@ class PreviewScreen(ThemedWidget):
         # Next contact (enhanced styling)
         self.next_contact_btn = QPushButton("Next ▶")
         self.next_contact_btn.clicked.connect(self.select_next_contact)
-        theme = self.get_current_theme()
         self.next_contact_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: {theme['surface_container']};
+                background-color: {theme['surface_elevated']};
                 color: {theme['text_primary']};
                 border: 1px solid {theme['border']};
                 padding: 8px 14px;
@@ -703,13 +304,13 @@ class PreviewScreen(ThemedWidget):
                 min-width: 70px;
             }}
             QPushButton:hover {{
-                background-color: {theme['hover_overlay']};
-                border-color: {theme['primary']};
+                background-color: {theme['button_secondary']};
+                border-color: {theme['border']};
             }}
             QPushButton:disabled {{
                 color: {theme['text_disabled']};
-                background-color: {theme['disabled_background']};
-                border-color: {theme['disabled']};
+                background-color: {theme['surface']};
+                border-color: {theme['border']};
             }}
         """)
         layout.addWidget(self.next_contact_btn)
@@ -718,8 +319,10 @@ class PreviewScreen(ThemedWidget):
         
     def create_email_preview_panel(self):
         """Create the right panel with email preview - matching compose screen styling"""
-        panel = QGroupBox("Email Preview")
+        # Get current theme for styling
         theme = self.get_current_theme()
+        
+        panel = QGroupBox("Email Preview")
         panel.setStyleSheet(f"""
             QGroupBox {{
                 font-weight: 600;
@@ -735,7 +338,7 @@ class PreviewScreen(ThemedWidget):
                 subcontrol-origin: margin;
                 left: 12px;
                 padding: 0 8px 0 8px;
-                color: {theme['text_primary']};
+                color: {theme['text_secondary']};
                 background-color: {theme['surface']};
                 font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
             }}
@@ -766,12 +369,14 @@ class PreviewScreen(ThemedWidget):
         
     def create_email_headers_section(self):
         """Create the email headers display - enhanced styling to match compose screen"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         section = QFrame()
         section.setFrameStyle(QFrame.NoFrame)
-        theme = self.get_current_theme()
         section.setStyleSheet(f"""
             QFrame {{
-                background-color: {theme['surface_container']};
+                background-color: {theme['surface_elevated']};
                 border: 1px solid {theme['border']};
                 border-radius: 6px;
                 padding: 16px;
@@ -785,7 +390,6 @@ class PreviewScreen(ThemedWidget):
         
         # To field (enhanced styling)
         self.to_label = QLabel("To: (No contact selected)")
-        theme = self.get_current_theme()
         self.to_label.setStyleSheet(f"""
             QLabel {{
                 font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
@@ -799,7 +403,6 @@ class PreviewScreen(ThemedWidget):
         
         # From field
         self.from_label = QLabel("From: (Not set)")
-        theme = self.get_current_theme()
         self.from_label.setStyleSheet(f"""
             QLabel {{
                 font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
@@ -812,7 +415,6 @@ class PreviewScreen(ThemedWidget):
         
         # Subject field
         self.subject_label = QLabel("Subject: (Not set)")
-        theme = self.get_current_theme()
         self.subject_label.setStyleSheet(f"""
             QLabel {{
                 font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
@@ -828,8 +430,10 @@ class PreviewScreen(ThemedWidget):
         
     def create_email_content_section(self):
         """Create the email content preview - matching attachments widget container pattern"""
-        section = QGroupBox("Email Content")
+        # Get current theme for styling
         theme = self.get_current_theme()
+        
+        section = QGroupBox("Email Content")
         section.setStyleSheet(f"""
             QGroupBox {{
                 font-weight: 600;
@@ -845,7 +449,7 @@ class PreviewScreen(ThemedWidget):
                 subcontrol-origin: margin;
                 left: 12px;
                 padding: 0 8px 0 8px;
-                color: {theme['text_primary']};
+                color: {theme['text_secondary']};
                 background-color: {theme['surface']};
                 font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
             }}
@@ -863,24 +467,24 @@ class PreviewScreen(ThemedWidget):
         content_scroll_area.setFrameStyle(QFrame.NoFrame)
         content_scroll_area.setStyleSheet(f"""
             QScrollArea {{
-                background-color: {theme['surface_container']};
+                background-color: {theme['surface_elevated']};
                 border: 1px solid {theme['border']};
                 border-radius: 8px;
                 margin: 4px;
             }}
             QScrollBar:vertical {{
-                background-color: {theme['surface_container']};
+                background-color: {theme['surface_elevated']};
                 width: 8px;
                 border-radius: 4px;
                 margin: 0px;
             }}
             QScrollBar::handle:vertical {{
-                background-color: {theme['scrollbar_handle']};
+                background-color: {theme['border']};
                 border-radius: 4px;
                 min-height: 20px;
             }}
             QScrollBar::handle:vertical:hover {{
-                background-color: {theme['scrollbar_handle_hover']};
+                background-color: {theme['text_disabled']};
             }}
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 height: 0px;
@@ -900,7 +504,6 @@ class PreviewScreen(ThemedWidget):
         self.content_preview.setReadOnly(True)
         self.content_preview.setMinimumHeight(120)
         # Remove maximum height to allow flexible sizing
-        theme = self.get_current_theme()
         self.content_preview.setStyleSheet(f"""
             QTextEdit {{
                 border: 1px solid {theme['border']};
@@ -914,7 +517,7 @@ class PreviewScreen(ThemedWidget):
             }}
             QTextEdit:focus {{
                 border-color: {theme['primary']};
-                background-color: {theme['surface']};
+                background-color: white;
             }}
         """)
         self.content_preview.setPlaceholderText("Email content will appear here when a contact is selected...")
@@ -929,8 +532,10 @@ class PreviewScreen(ThemedWidget):
         
     def create_attachments_section(self):
         """Create the attachments display section - enhanced styling matching compose screen"""
-        section = QGroupBox("Attachments")
+        # Get current theme for styling
         theme = self.get_current_theme()
+        
+        section = QGroupBox("Attachments")
         section.setStyleSheet(f"""
             QGroupBox {{
                 font-weight: 600;
@@ -939,15 +544,15 @@ class PreviewScreen(ThemedWidget):
                 border-radius: 6px;
                 margin-top: 10px;
                 padding-top: 16px;
-                background-color: {theme['surface_container']};
+                background-color: {theme['surface_elevated']};
                 color: {theme['text_primary']};
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 12px;
                 padding: 0 8px 0 8px;
-                color: {theme['text_primary']};
-                background-color: {theme['surface_container']};
+                color: {theme['text_secondary']};
+                background-color: {theme['surface_elevated']};
                 font-family: 'SF Pro Display', 'Segoe UI', 'Arial', sans-serif;
             }}
         """)
@@ -958,7 +563,6 @@ class PreviewScreen(ThemedWidget):
         
         # Attachment summary (enhanced styling)
         self.attachment_summary = QLabel("📎 No attachments")
-        theme = self.get_current_theme()
         self.attachment_summary.setStyleSheet(f"""
             QLabel {{
                 color: {theme['primary']};
@@ -977,7 +581,6 @@ class PreviewScreen(ThemedWidget):
         # Attachment list (enhanced styling)
         self.attachment_list = QListWidget()
         self.attachment_list.setMaximumHeight(120)
-        theme = self.get_current_theme()
         self.attachment_list.setStyleSheet(f"""
             QListWidget {{
                 border: 1px solid {theme['border']};
@@ -987,7 +590,7 @@ class PreviewScreen(ThemedWidget):
             }}
             QListWidget::item {{
                 padding: 8px;
-                border-bottom: 1px solid {theme['divider']};
+                border-bottom: 1px solid {theme['border']};
                 color: {theme['text_primary']};
             }}
         """)
@@ -998,6 +601,9 @@ class PreviewScreen(ThemedWidget):
         
     def create_validation_warnings_section(self):
         """Create the validation warnings section"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.warnings_section = QFrame()
         self.warnings_section.setFrameStyle(QFrame.NoFrame)
         self.warnings_section.setVisible(False)  # Hidden by default
@@ -1009,12 +615,11 @@ class PreviewScreen(ThemedWidget):
         # Warning message
         self.warning_message = QLabel()
         self.warning_message.setWordWrap(True)
-        theme = self.get_current_theme()
         self.warning_message.setStyleSheet(f"""
             QLabel {{
                 color: {theme['error']};
                 font-size: 11px;
-                background-color: {theme['error_container']};
+                background-color: {theme['error']}22;
                 border: 1px solid {theme['error']};
                 border-radius: 4px;
                 padding: 8px;
@@ -1027,16 +632,18 @@ class PreviewScreen(ThemedWidget):
         
     def create_navigation(self):
         """Create the navigation buttons - matching compose screen styling"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         layout = QHBoxLayout()
         layout.setSpacing(15)
         
         # Previous button (matching compose screen Back button styling)
         previous_btn = QPushButton("Previous")
         previous_btn.clicked.connect(self.on_previous_clicked)
-        theme = self.get_current_theme()
         previous_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: {theme['surface_container']};
+                background-color: {theme['button_secondary']};
                 color: {theme['text_primary']};
                 border: 2px solid {theme['border']};
                 padding: 10px 20px;
@@ -1047,11 +654,11 @@ class PreviewScreen(ThemedWidget):
                 min-height: 36px;
             }}
             QPushButton:hover {{
-                background-color: {theme['hover_overlay']};
-                border-color: {theme['primary']};
+                background-color: {theme['surface_elevated']};
+                border-color: {theme['border']};
             }}
             QPushButton:pressed {{
-                background-color: {theme['active_overlay']};
+                background-color: {theme['surface']};
             }}
         """)
         layout.addWidget(previous_btn)
@@ -1062,56 +669,14 @@ class PreviewScreen(ThemedWidget):
         # Send All button (primary - using BUTTON_STYLE like compose screen Preview button)
         self.send_all_btn = QPushButton("Send All Emails")
         self.send_all_btn.clicked.connect(self.on_send_all_clicked)
-        theme = self.get_current_theme()
-        self.send_all_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {theme['primary']};
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 4px;
-                font-weight: bold;
-                font-size: 12px;
-                min-width: 120px;
-                min-height: 36px;
-            }}
-            QPushButton:hover {{
-                background-color: {theme['primary_hover']};
-            }}
-            QPushButton:pressed {{
-                background-color: {theme['primary_pressed']};
-            }}
-            QPushButton:disabled {{
-                background-color: {theme['disabled']};
-                color: {theme['text_disabled']};
-            }}
-        """)
+        self.send_all_btn.setStyleSheet(BUTTON_STYLE)
         self.send_all_btn.setEnabled(False)  # Disabled until data is loaded
         layout.addWidget(self.send_all_btn)
         
         # Exit button
         exit_btn = QPushButton("Exit")
         exit_btn.clicked.connect(self.on_exit_clicked)
-        theme = self.get_current_theme()
-        exit_btn.setStyleSheet(f"""
-            QPushButton {{
-                background-color: {theme['error']};
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 4px;
-                font-weight: bold;
-                font-size: 12px;
-                min-width: 80px;
-                min-height: 36px;
-            }}
-            QPushButton:hover {{
-                background-color: {theme['error_hover']};
-            }}
-            QPushButton:pressed {{
-                background-color: {theme['error_pressed']};
-            }}
-        """)
+        exit_btn.setStyleSheet(ERROR_BUTTON_STYLE)
         layout.addWidget(exit_btn)
         
         return layout
@@ -1271,17 +836,20 @@ class PreviewScreen(ThemedWidget):
     # Attachment methods
     def update_attachments_display(self):
         """Update the attachments display"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.attachment_list.clear()
         
         if not self.attachments:
             self.attachment_summary.setText("📎 No attachments")
             self.attachment_summary.setStyleSheet(f"""
                 QLabel {{
-                    color: {DARK_GREY};
+                    color: {theme['text_secondary']};
                     font-size: 11px;
                     font-weight: bold;
                     padding: 8px;
-                    background-color: white;
+                    background-color: {theme['surface']};
                     border-radius: 4px;
                 }}
             """)
@@ -1306,7 +874,7 @@ class PreviewScreen(ThemedWidget):
         self.attachment_summary.setText(f"📎 {count} file{'s' if count != 1 else ''} ({size_str})")
         self.attachment_summary.setStyleSheet(f"""
             QLabel {{
-                color: {PRIMARY_BLUE};
+                color: {theme['primary']};
                 font-size: 11px;
                 font-weight: bold;
                 padding: 8px;

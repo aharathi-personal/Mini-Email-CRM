@@ -7,19 +7,20 @@ Enhanced with attachment functionality
 
 import os
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, 
-    QLabel, QFrame, QGroupBox, QListWidget, QListWidgetItem,
-    QSizePolicy, QSpacerItem, QApplication, QFileDialog, QScrollArea,
-    QMessageBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,
+    QFileDialog, QFrame, QListWidget, QListWidgetItem, QScrollArea, QSizePolicy,
+    QMessageBox, QSpacerItem
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QTimer, QMimeData, QUrl
-from PyQt5.QtGui import QFont, QTextCharFormat, QTextCursor, QPalette, QDragEnterEvent, QDropEvent
+from PyQt5.QtCore import Qt, pyqtSignal, QMimeData, QUrl, QTimer
+from PyQt5.QtGui import QFont, QPixmap, QDropEvent, QDragEnterEvent, QTextCursor
 
-from ui.styles.stylesheet import (
-    BUTTON_STYLE, INPUT_STYLE, CARD_STYLE, SUBTITLE_STYLE,
-    PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, BORDER_GREY, LIGHT_GREY,
-    FONT_SIZE_SMALL, DARK_GREY, WARNING_ORANGE
-)
+# Import themed dialogs
+from ui.error_dialogs import ThemedMessageBox, ErrorDialogManager
+
+# Import theme-aware styling system
+from core.theme_manager import ThemeManager
+from ui.styles.dynamic_stylesheet import DynamicStylesheetGenerator
+from utils.text_visibility import ThemedTextHelper
 from models.attachment import Attachment, AttachmentManager, AttachmentType
 
 
@@ -41,6 +42,12 @@ class EmailEditor(QWidget):
         super().__init__(parent)
         self.max_characters = max_characters
         self.attachment_manager = AttachmentManager()
+        
+        # Initialize theme system
+        self.theme_manager = ThemeManager()
+        self.stylesheet_generator = DynamicStylesheetGenerator(self.theme_manager)
+        self.text_helper = ThemedTextHelper(self.theme_manager)
+        
         self.available_placeholders = [
             '{firstname}',
             '{lastname}',
@@ -49,6 +56,61 @@ class EmailEditor(QWidget):
         self.setup_ui()
         self.connect_signals()
         self.setup_drag_drop()
+    
+    def get_theme_colors(self):
+        """Get current theme colors for styling"""
+        current_theme = self.theme_manager.get_theme()
+        return {
+            'background': current_theme['background'],
+            'surface': current_theme['surface'],
+            'primary': current_theme['primary'],
+            'text_primary': current_theme['text_primary'],
+            'text_secondary': current_theme['text_secondary'],
+            'border': current_theme['border'],
+            'success': current_theme['success'],
+            'error': current_theme['error'],
+            'warning': current_theme['warning'],
+            'surface_elevated': current_theme.get('surface_elevated', current_theme['surface'])
+        }
+    
+    def get_theme_aware_style(self, style_type):
+        """Get theme-aware styles for different UI elements"""
+        colors = self.get_theme_colors()
+        
+        if style_type == 'subtitle':
+            return f"""
+                color: {colors['text_primary']};
+                font-weight: 600;
+                font-size: 14px;
+                margin: 4px 0px;
+            """
+        elif style_type == 'toolbar':
+            return f"""
+                QFrame {{
+                    background-color: {colors['surface_elevated']};
+                    border: 1px solid {colors['border']};
+                    border-radius: 6px;
+                    padding: 4px;
+                }}
+            """
+        elif style_type == 'input':
+            # Use the text helper's method instead of direct optimal color call
+            text_style = self.text_helper.get_text_style('body', 'primary', 'surface')
+            return f"""
+                QTextEdit {{
+                    background-color: {colors['surface']};
+                    {text_style}
+                    border: 1px solid {colors['border']};
+                    border-radius: 4px;
+                    padding: 8px;
+                    font-size: 14px;
+                    line-height: 1.4;
+                }}
+                QTextEdit:focus {{
+                    border-color: {colors['primary']};
+                }}
+            """
+        return ""
         
     def setup_ui(self):
         """Set up the user interface - just the email editor section"""
@@ -58,7 +120,7 @@ class EmailEditor(QWidget):
         
         # Email body label
         body_label = QLabel("Email body")
-        body_label.setStyleSheet(SUBTITLE_STYLE)
+        body_label.setStyleSheet(self.get_theme_aware_style('subtitle'))
         main_layout.addWidget(body_label)
         
         # Create formatting toolbar
@@ -84,14 +146,7 @@ class EmailEditor(QWidget):
         toolbar = QFrame()
         toolbar.setFrameStyle(QFrame.Box)
         toolbar.setLineWidth(1)
-        toolbar.setStyleSheet(f"""
-            QFrame {{
-                background-color: {LIGHT_GREY};
-                border: 1px solid {BORDER_GREY};
-                border-radius: 4px;
-                padding: 4px;
-            }}
-        """)
+        toolbar.setStyleSheet(self.get_theme_aware_style('toolbar'))
         
         layout = QHBoxLayout()
         layout.setContentsMargins(6, 4, 6, 4)
@@ -119,29 +174,13 @@ class EmailEditor(QWidget):
         separator = QFrame()
         separator.setFrameShape(QFrame.VLine)
         separator.setFrameShadow(QFrame.Sunken)
-        separator.setStyleSheet(f"color: {BORDER_GREY}; margin: 2px;")
+        colors = self.get_theme_colors()
+        separator.setStyleSheet(f"color: {colors['border']}; margin: 2px;")
         layout.addWidget(separator)
         
-        # Attachment button
+        # Attachment button - use the same theme-aware styling as other toolbar buttons
         self.attachment_btn = self.create_toolbar_button("📎", "Attach files", self.open_file_dialog)
-        self.attachment_btn.setStyleSheet(f"""
-            QPushButton {{
-                min-width: 28px;
-                min-height: 28px;
-                border: 1px solid {BORDER_GREY};
-                border-radius: 3px;
-                background-color: white;
-                color: #5F6368;
-                font-size: 14px;
-            }}
-            QPushButton:hover {{
-                background-color: #F1F3F4;
-                border-color: #DADCE0;
-            }}
-            QPushButton:pressed {{
-                background-color: #E8EAED;
-            }}
-        """)
+        self.attachment_btn.setStyleSheet(self.get_toolbar_button_style())
         layout.addWidget(self.attachment_btn)
         
         # Add spacer to push buttons to the left
@@ -153,28 +192,33 @@ class EmailEditor(QWidget):
         
     def get_toolbar_button_style(self):
         """Get consistent toolbar button styling following UI Guidelines"""
+        colors = self.get_theme_colors()
+        button_bg = colors['surface']
+        # Use the text helper's proper method
+        text_style = self.text_helper.get_text_style('button', 'primary', 'surface')
+        
         return f"""
             QPushButton {{
                 min-width: 28px;
                 min-height: 28px;
-                border: 1px solid {BORDER_GREY};
+                border: 1px solid {colors['border']};
                 border-radius: 3px;
-                background-color: white;
-                color: {DARK_GREY};
-                font-size: {FONT_SIZE_SMALL};
+                background-color: {button_bg};
+                {text_style}
+                font-size: 12px;
             }}
             QPushButton:hover {{
-                background-color: #E3F2FD;
-                border-color: {PRIMARY_BLUE};
+                background-color: {colors['primary']}33;
+                border-color: {colors['primary']};
             }}
             QPushButton:pressed {{
-                background-color: {PRIMARY_BLUE};
-                color: white;
+                background-color: {colors['primary']};
+                color: {colors['surface']};
             }}
             QPushButton:checked {{
-                background-color: {PRIMARY_BLUE};
-                color: white;
-                border-color: #1976D2;
+                background-color: {colors['primary']};
+                color: {colors['surface']};
+                border-color: {colors['primary']};
             }}
         """
         
@@ -191,7 +235,7 @@ class EmailEditor(QWidget):
         editor = QTextEdit()
         editor.setMinimumHeight(200)
         editor.setMaximumHeight(350)
-        editor.setStyleSheet(INPUT_STYLE)
+        editor.setStyleSheet(self.get_theme_aware_style('input'))
         
         # Set placeholder text (as seen in Screen 2)
         editor.setPlaceholderText("Dear {firstname},\n\nI hope this email finds you well.")
@@ -206,10 +250,11 @@ class EmailEditor(QWidget):
         """Create the character count display (27/5000 format from Screen 2)"""
         counter = QLabel("0/5000")
         counter.setAlignment(Qt.AlignRight)
+        colors = self.get_theme_colors()
         counter.setStyleSheet(f"""
             QLabel {{
-                color: {DARK_GREY};
-                font-size: {FONT_SIZE_SMALL};
+                color: {colors['text_secondary']};
+                font-size: 12px;
                 padding: 4px;
                 background-color: transparent;
             }}
@@ -285,12 +330,13 @@ class EmailEditor(QWidget):
         self.char_count_label.setText(f"{char_count}/{self.max_characters}")
         
         # Change color based on character limit (following UI Guidelines)
+        colors = self.get_theme_colors()
         if char_count > self.max_characters:
-            self.char_count_label.setStyleSheet(f"color: {ERROR_RED}; font-weight: bold;")  # Error red
+            self.char_count_label.setStyleSheet(f"color: {colors['error']}; font-weight: bold;")  # Error red
         elif char_count > self.max_characters * 0.9:  # 90% of limit
-            self.char_count_label.setStyleSheet(f"color: {WARNING_ORANGE}; font-weight: bold;")  # Warning orange
+            self.char_count_label.setStyleSheet(f"color: {colors['warning']}; font-weight: bold;")  # Warning orange
         else:
-            self.char_count_label.setStyleSheet(f"color: {DARK_GREY}; font-weight: normal;")
+            self.char_count_label.setStyleSheet(f"color: {colors['text_secondary']}; font-weight: normal;")
             
         # Emit character count signal
         self.character_count_changed.emit(char_count, self.max_characters)
@@ -595,7 +641,7 @@ class EmailEditor(QWidget):
         filename = os.path.basename(file_path)
         error_msg = f"Failed to attach '{filename}':\n\n" + "\n".join(errors)
         
-        msg_box = QMessageBox()
+        msg_box = ThemedMessageBox()
         msg_box.setIcon(QMessageBox.Warning)
         msg_box.setWindowTitle("Attachment Error")
         msg_box.setText(error_msg)

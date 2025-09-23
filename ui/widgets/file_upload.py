@@ -17,8 +17,11 @@ from ui.styles.stylesheet import (
     DARK_GREY, LIGHT_GREY, BORDER_GREY, FONT_SIZE_SMALL
 )
 
+# Import theme system
+from ui.base.themed_widgets import ThemeAwareMixin
 
-class FileUploadWidget(QWidget):
+
+class FileUploadWidget(QWidget, ThemeAwareMixin):
     """
     Custom widget for file upload with drag-and-drop support
     Specifically designed for CSV contact file uploads
@@ -30,6 +33,7 @@ class FileUploadWidget(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.__init_theme_awareness__()  # Initialize theme awareness
         self.selected_file_path = None
         self.setup_ui()
         
@@ -49,7 +53,7 @@ class FileUploadWidget(QWidget):
         # Selected file display
         self.file_info_label = QLabel("No file selected")
         self.file_info_label.setAlignment(Qt.AlignCenter)
-        self.file_info_label.setStyleSheet("color: #666; font-style: italic;")
+        # Theme styling will be applied in apply_theme_customizations()
         layout.addWidget(self.file_info_label)
         
         # Validation feedback
@@ -60,6 +64,50 @@ class FileUploadWidget(QWidget):
         
         self.setLayout(layout)
         
+        # Apply initial theme
+        self.apply_theme_customizations()
+        
+    def apply_theme_customizations(self):
+        """Apply theme-aware styling to all UI elements"""
+        theme = self.get_current_theme()
+        
+        # Update file info label (no file selected state)
+        if hasattr(self, 'file_info_label') and self.file_info_label.text() == "No file selected":
+            self.file_info_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme['text_placeholder']};
+                    font-style: italic;
+                }}
+            """)
+        
+        # Update feedback label
+        if hasattr(self, 'feedback_label'):
+            self.feedback_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme['text_primary']};
+                }}
+            """)
+        
+        # Update browse button
+        if hasattr(self, 'browse_button'):
+            self.browse_button.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {theme['primary']};
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 6px;
+                    font-weight: bold;
+                    font-size: 14px;
+                }}
+                QPushButton:hover {{
+                    background-color: {theme['primary_hover']};
+                }}
+                QPushButton:pressed {{
+                    background-color: {theme['primary_pressed']};
+                }}
+            """)
+        
     def create_drop_zone(self):
         """Create the drag-and-drop zone"""
         drop_frame = QFrame()
@@ -67,15 +115,18 @@ class FileUploadWidget(QWidget):
         drop_frame.setFrameStyle(QFrame.Box)
         drop_frame.setLineWidth(2)
         drop_frame.setAcceptDrops(True)
+        
+        # Use theme-aware colors for drop zone
+        theme = self.get_current_theme()
         drop_frame.setStyleSheet(f"""
             QFrame {{
-                border: 2px dashed {BORDER_GREY};
+                border: 2px dashed {theme['border']};
                 border-radius: 10px;
-                background-color: {LIGHT_GREY};
+                background-color: {theme['surface_container']};
             }}
             QFrame:hover {{
-                border-color: #007acc;
-                background-color: #f0f8ff;
+                border-color: {theme['primary']};
+                background-color: {theme['hover_overlay']};
             }}
         """)
         
@@ -91,13 +142,13 @@ class FileUploadWidget(QWidget):
         # Instruction text
         instruction_label = QLabel("Drag and drop CSV file here")
         instruction_label.setAlignment(Qt.AlignCenter)
-        instruction_label.setStyleSheet(f"font-size: 14px; color: {DARK_GREY}; border: none; background: transparent;")
+        instruction_label.setStyleSheet(f"font-size: 14px; color: {theme['text_primary']}; border: none; background: transparent;")
         layout.addWidget(instruction_label)
         
         # Supported formats
         format_label = QLabel("Supported: .csv files with email, firstname, lastname columns")
         format_label.setAlignment(Qt.AlignCenter)
-        format_label.setStyleSheet(f"font-size: {FONT_SIZE_SMALL}; color: #999; border: none; background: transparent;")
+        format_label.setStyleSheet(f"font-size: {FONT_SIZE_SMALL}; color: {theme['text_tertiary']}; border: none; background: transparent;")
         layout.addWidget(format_label)
         
         drop_frame.setLayout(layout)
@@ -259,55 +310,89 @@ class FileUploadWidget(QWidget):
         """Update UI to show selected file"""
         filename = os.path.basename(file_path)
         self.file_info_label.setText(f"Selected: {filename}")
-        self.file_info_label.setStyleSheet("color: #333; font-weight: bold;")
+        
+        # Use theme-aware colors for selected file display
+        theme = self.get_current_theme()
+        self.file_info_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme['text_primary']};
+                font-weight: bold;
+            }}
+        """)
         
         # Update drop zone style to indicate success
-        self.drop_zone.setStyleSheet("""
-            QFrame {
-                border: 2px solid #28a745;
+        self.drop_zone.setStyleSheet(f"""
+            QFrame {{
+                border: 2px solid {theme['success']};
                 border-radius: 10px;
-                background-color: #e8f5e8;
-            }
+                background-color: {theme['surface_container']};
+            }}
         """)
         
     def show_validation_success(self, message):
         """Show validation success message"""
         self.feedback_label.setText(f"✅ {message}")
-        self.feedback_label.setStyleSheet(f"color: {SUCCESS_GREEN}; font-weight: bold;")
+        
+        # Use theme-aware colors for success display
+        theme = self.get_current_theme()
+        self.feedback_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme['success']};
+                font-weight: bold;
+            }}
+        """)
         
     def show_validation_error(self, message):
         """Show validation error message"""
         self.feedback_label.setText(f"❌ {message}")
-        self.feedback_label.setStyleSheet(f"color: {ERROR_RED}; font-weight: bold;")
+        
+        # Use theme-aware colors for error display
+        theme = self.get_current_theme()
+        self.feedback_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme['error']};
+                font-weight: bold;
+            }}
+        """)
+        
         self.validation_error.emit(message)
         
         # Reset drop zone style
-        self.drop_zone.setStyleSheet("""
-            QFrame {
-                border: 2px dashed #dc3545;
+        self.drop_zone.setStyleSheet(f"""
+            QFrame {{
+                border: 2px dashed {theme['error']};
                 border-radius: 10px;
-                background-color: #ffeaea;
-            }
+                background-color: {theme['surface_container']};
+            }}
         """)
         
     def clear_selection(self):
         """Clear the current file selection"""
         self.selected_file_path = None
         self.file_info_label.setText("No file selected")
-        self.file_info_label.setStyleSheet("color: #666; font-style: italic;")
+        
+        # Use theme-aware colors for cleared state
+        theme = self.get_current_theme()
+        self.file_info_label.setStyleSheet(f"""
+            QLabel {{
+                color: {theme['text_placeholder']};
+                font-style: italic;
+            }}
+        """)
+        
         self.feedback_label.setText("")
         
         # Reset drop zone to default style
-        self.drop_zone.setStyleSheet("""
-            QFrame {
-                border: 2px dashed #ccc;
+        self.drop_zone.setStyleSheet(f"""
+            QFrame {{
+                border: 2px dashed {theme['border']};
                 border-radius: 10px;
-                background-color: #f9f9f9;
-            }
-            QFrame:hover {
-                border-color: #007acc;
-                background-color: #f0f8ff;
-            }
+                background-color: {theme['surface_container']};
+            }}
+            QFrame:hover {{
+                border-color: {theme['primary']};
+                background-color: {theme['hover_overlay']};
+            }}
         """)
         
     def get_selected_file(self):

@@ -24,6 +24,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from core.theme_manager import ThemeManager
 from ui.styles.dynamic_stylesheet import DynamicStylesheetGenerator
+from utils.text_visibility import TextVisibilityManager, ThemedTextHelper
 
 
 class ThemedWidget(QWidget):
@@ -102,6 +103,18 @@ class ThemedWidget(QWidget):
         """
         pass
     
+    def get_current_theme(self) -> dict:
+        """Get the current theme configuration"""
+        if not self.theme_manager:
+            return {}
+        return self.theme_manager.get_theme()
+    
+    def get_current_theme_name(self) -> str:
+        """Get the current theme name"""
+        if not self.theme_manager:
+            return "unknown"
+        return self.theme_manager.get_current_theme_name()
+    
     def get_optimal_text_color(self, background_color: str = None, text_type: str = "primary") -> str:
         """Get optimal text color for the given background"""
         if not self.visibility_manager:
@@ -112,14 +125,6 @@ class ThemedWidget(QWidget):
             background_color = theme['surface']
         
         return self.visibility_manager.get_optimal_text_color(background_color, None, text_type)
-    
-    def get_text_style(self, context: str = "body", text_type: str = "primary", 
-                      background_key: str = "surface") -> str:
-        """Get complete text style for the given context"""
-        if not self.text_helper:
-            return ""
-        
-        return self.text_helper.get_text_style(context, text_type, background_key)
     
     def create_themed_label(self, text: str = "", label_type: str = "default") -> QLabel:
         """Create a label with automatic theme styling"""

@@ -25,9 +25,7 @@ from ui.widgets.email_editor import EmailEditor
 from ui.base.themed_widgets import ThemedWidget
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUCCESS_BUTTON_STYLE, ERROR_BUTTON_STYLE,
-    INPUT_STYLE, CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE,
-    PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, LIGHT_GREY, BORDER_GREY,
-    WARNING_ORANGE, DARK_GREY
+    INPUT_STYLE, CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE
 )
 
 
@@ -57,9 +55,27 @@ class ComposeScreen(ThemedWidget):
         self.themed_labels = []
         self.themed_buttons = []
         
+        # Auto-populate from email with SMTP username for security
+        self._auto_populate_from_email()
+        
         # Initialize UI
         self.setup_ui()
         self.setup_validation()
+    
+    def _auto_populate_from_email(self):
+        """Auto-populate the from email field with SMTP username for security"""
+        try:
+            from config.settings import SMTP_SETTINGS
+            smtp_username = SMTP_SETTINGS.get('username', '').strip()
+            if smtp_username:
+                # We'll set this after UI is created in setup_ui
+                self._smtp_username = smtp_username
+            else:
+                self._smtp_username = None
+        except Exception as e:
+            # If there's any error loading SMTP settings, don't auto-populate
+            self._smtp_username = None
+            print(f"Warning: Could not load SMTP username for auto-population: {e}")
     
     def apply_theme_customizations(self):
         """Apply theme-specific customizations for enhanced text visibility"""
@@ -82,6 +98,9 @@ class ComposeScreen(ThemedWidget):
         self._update_step_indicator()
         self._update_status_labels()
         self._update_input_fields()
+        self._update_validation_feedback()
+        self._update_preview_area()
+        self._update_attachment_indicators()
         
     def _update_step_indicator(self):
         """Update step indicator with enhanced visibility"""
@@ -154,8 +173,75 @@ class ComposeScreen(ThemedWidget):
         for attr_name in ['from_email_input', 'subject_input']:
             if hasattr(self, attr_name):
                 getattr(self, attr_name).setStyleSheet(input_style)
-        self.setup_ui()
-        self.connect_signals()
+                
+    def _update_validation_feedback(self):
+        """Update validation feedback styling with theme colors"""
+        if hasattr(self, 'validation_message') and self.theme_manager:
+            theme = self.theme_manager.get_current_theme()
+            self.validation_message.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme['error']};
+                    font-size: 11px;
+                    background-color: {theme['error']}22;
+                    border: 1px solid {theme['error']};
+                    border-radius: 4px;
+                    padding: 8px;
+                    margin: 4px 0px;
+                }}
+            """)
+            
+    def _update_preview_area(self):
+        """Update preview area styling with theme colors"""
+        if not self.theme_manager:
+            return
+        
+        theme = self.theme_manager.get_current_theme()
+        
+        # Update preview container
+        if hasattr(self, 'preview_container'):
+            self.preview_container.setStyleSheet(f"""
+                QGroupBox {{
+                    font-weight: bold;
+                    border: 1px solid {theme['border']};
+                    border-radius: 4px;
+                    margin-top: 8px;
+                    padding-top: 12px;
+                    background-color: {theme['surface']};
+                }}
+                QGroupBox::title {{
+                    subcontrol-origin: margin;
+                    left: 10px;
+                    padding: 0 5px 0 5px;
+                    color: {theme['text_secondary']};
+                    background-color: {theme['surface']};
+                }}
+            """)
+        
+        # Update preview text area
+        if hasattr(self, 'preview_text'):
+            self.preview_text.setStyleSheet(f"""
+                QTextEdit {{
+                    border: 1px solid {theme['border']};
+                    border-radius: 4px;
+                    background-color: {theme['surface']};
+                    font-size: 11px;
+                    color: {theme['text_primary']};
+                }}
+            """)
+            
+    def _update_attachment_indicators(self):
+        """Update attachment indicators styling with theme colors"""
+        if hasattr(self, 'attachment_indicators') and self.theme_manager:
+            theme = self.theme_manager.get_current_theme()
+            self.attachment_indicators.setStyleSheet(f"""
+                QLabel {{
+                    color: {theme['text_secondary']};
+                    font-size: 10px;
+                    padding: 4px 8px;
+                    background-color: {theme.get('surface_elevated', theme['surface'])};
+                    border-radius: 3px;
+                }}
+            """)
         
     def setup_validation(self):
         """Set up validation timer and connections"""
@@ -305,6 +391,12 @@ class ComposeScreen(ThemedWidget):
                 color: {theme_colors['text_placeholder']};
             }}
         """)
+        
+        # Auto-populate with SMTP username if available
+        if hasattr(self, '_smtp_username') and self._smtp_username:
+            self.from_email_input.setText(self._smtp_username)
+            self.from_email_input.setToolTip(f"Auto-populated from SMTP credentials: {self._smtp_username}")
+        
         layout.addWidget(self.from_email_input)
         
         # Spacer between fields
@@ -506,42 +598,18 @@ class ComposeScreen(ThemedWidget):
         # Validation message label
         self.validation_message = QLabel()
         self.validation_message.setWordWrap(True)
-        self.validation_message.setStyleSheet(f"""
-            QLabel {{
-                color: {ERROR_RED};
-                font-size: 11px;
-                background-color: #FFEBEE;
-                border: 1px solid {ERROR_RED};
-                border-radius: 4px;
-                padding: 8px;
-                margin: 4px 0px;
-            }}
-        """)
-        layout.addWidget(self.validation_message)
+        # Theme styling will be applied in apply_theme_customizations()
         
+        layout.addWidget(self.validation_message)
         feedback_area.setLayout(layout)
+        
         return feedback_area
         
     def create_preview_area(self):
         """Create collapsible email preview area with attachment indicators"""
         self.preview_container = QGroupBox("Email Preview")
-        self.preview_container.setStyleSheet(f"""
-            QGroupBox {{
-                font-weight: bold;
-                border: 1px solid {BORDER_GREY};
-                border-radius: 4px;
-                margin-top: 8px;
-                padding-top: 12px;
-                background-color: #FAFAFA;
-            }}
-            QGroupBox::title {{
-                subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
-                color: {DARK_GREY};
-                background-color: #FAFAFA;
-            }}
-        """)
+        # Theme styling will be applied in apply_theme_customizations()
+        
         self.preview_container.setCheckable(True)
         self.preview_container.setChecked(False)  # Collapsed by default
         self.preview_container.setMaximumHeight(200)
@@ -557,29 +625,13 @@ class ComposeScreen(ThemedWidget):
         self.preview_text = QTextEdit()
         self.preview_text.setReadOnly(True)
         self.preview_text.setMaximumHeight(120)
-        self.preview_text.setStyleSheet(f"""
-            QTextEdit {{
-                border: 1px solid {BORDER_GREY};
-                border-radius: 4px;
-                background-color: white;
-                font-size: 11px;
-                color: {DARK_GREY};
-            }}
-        """)
+        # Theme styling will be applied in apply_theme_customizations()
         self.preview_text.setPlaceholderText("Email preview will appear here...")
         layout.addWidget(self.preview_text)
         
         # Attachment indicators
         self.attachment_indicators = QLabel("📎 No attachments")
-        self.attachment_indicators.setStyleSheet(f"""
-            QLabel {{
-                color: {DARK_GREY};
-                font-size: 10px;
-                padding: 4px 8px;
-                background-color: #F5F5F5;
-                border-radius: 3px;
-            }}
-        """)
+        # Theme styling will be applied in apply_theme_customizations()
         layout.addWidget(self.attachment_indicators)
         
         self.preview_container.setLayout(layout)
@@ -707,6 +759,9 @@ class ComposeScreen(ThemedWidget):
             
     def update_attachment_indicators(self):
         """Update attachment indicators in preview area"""
+        # Get current theme for dynamic styling
+        theme = self.get_current_theme()
+        
         if self.email_editor.has_attachments():
             summary = self.email_editor.get_attachment_summary()
             count = summary['count']
@@ -728,11 +783,11 @@ class ComposeScreen(ThemedWidget):
             self.attachment_indicators.setText(f"📎 {count} attachment{'s' if count != 1 else ''} ({size}) - {type_text}")
             self.attachment_indicators.setStyleSheet(f"""
                 QLabel {{
-                    color: {PRIMARY_BLUE};
+                    color: {theme['primary']};
                     font-size: 10px;
                     font-weight: bold;
                     padding: 4px 8px;
-                    background-color: #E3F2FD;
+                    background-color: {theme['primary']}22;
                     border-radius: 3px;
                 }}
             """)
@@ -740,10 +795,10 @@ class ComposeScreen(ThemedWidget):
             self.attachment_indicators.setText("📎 No attachments")
             self.attachment_indicators.setStyleSheet(f"""
                 QLabel {{
-                    color: {DARK_GREY};
+                    color: {theme['text_secondary']};
                     font-size: 10px;
                     padding: 4px 8px;
-                    background-color: #F5F5F5;
+                    background-color: {theme.get('surface_elevated', theme['surface'])};
                     border-radius: 3px;
                 }}
             """)
@@ -823,6 +878,9 @@ class ComposeScreen(ThemedWidget):
     # Data and validation methods
     def validate_form(self):
         """Enhanced validation including attachments"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         from_email = self.from_email_input.text().strip()
         subject = self.subject_input.text().strip()
         email_content = self.email_editor.get_plain_text().strip()
@@ -844,9 +902,9 @@ class ComposeScreen(ThemedWidget):
         if not attachments_valid and self.email_editor.has_attachments():
             self.preview_btn.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: {WARNING_ORANGE};
+                    background-color: {theme['warning']};
                     color: white;
-                    border: 2px solid {WARNING_ORANGE};
+                    border: 2px solid {theme['warning']};
                     padding: 10px 20px;
                     border-radius: 4px;
                     font-weight: bold;
@@ -855,9 +913,9 @@ class ComposeScreen(ThemedWidget):
                     min-height: 36px;
                 }}
                 QPushButton:disabled {{
-                    background-color: {LIGHT_GREY};
-                    color: #999999;
-                    border-color: {BORDER_GREY};
+                    background-color: {theme['button_secondary']};
+                    color: {theme['text_disabled']};
+                    border-color: {theme['border']};
                 }}
             """)
         else:
@@ -888,6 +946,21 @@ class ComposeScreen(ThemedWidget):
         # Basic email validation
         if '@' not in email_data['from_email'] or '.' not in email_data['from_email']:
             QMessageBox.warning(self, "Invalid Email", "Please enter a valid from email address.")
+            self.from_email_input.setFocus()
+            return False
+            
+        # Critical security check: Ensure from email matches SMTP credentials
+        from config.settings import SMTP_SETTINGS
+        smtp_username = SMTP_SETTINGS.get('username', '').strip()
+        
+        if smtp_username and email_data['from_email'].strip() != smtp_username:
+            QMessageBox.critical(
+                self, 
+                "Email Authorization Error", 
+                f"The 'From Email' address ({email_data['from_email']}) does not match your SMTP credentials.\n\n"
+                f"For security reasons, you can only send emails from the email address configured in your SMTP settings: {smtp_username}\n\n"
+                f"Please update the 'From Email' field to match your authenticated email address."
+            )
             self.from_email_input.setFocus()
             return False
             

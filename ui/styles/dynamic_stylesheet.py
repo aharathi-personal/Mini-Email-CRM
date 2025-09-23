@@ -43,7 +43,7 @@ class DynamicStylesheetGenerator:
 QMainWindow {{
     background-color: {theme['background']};
     color: {main_text};
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
     line-height: 1.4;
 }}
@@ -51,7 +51,7 @@ QMainWindow {{
 QWidget {{
     background-color: transparent;
     color: {surface_text};
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     line-height: 1.4;
 }}
 
@@ -159,21 +159,21 @@ QLabel.error {{
     color: {theme['error']};
     font-size: 12px;
     font-weight: 500;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }}
 
 QLabel.success {{
     color: {theme['success']};
     font-size: 12px;
     font-weight: 500;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }}
 
 QLabel.warning {{
     color: {theme['warning']};
     font-size: 12px;
     font-weight: 500;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
 }}
 
 QLabel.link {{

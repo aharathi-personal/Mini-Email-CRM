@@ -12,15 +12,14 @@ from PyQt5.QtCore import Qt, pyqtSignal, QTimer, QPropertyAnimation, QEasingCurv
 from PyQt5.QtGui import QFont, QPalette, QTextCursor
 from datetime import datetime
 
+from ui.widgets.themed_widget import ThemedWidget
 from ui.styles.stylesheet import (
     TITLE_STYLE, SUBTITLE_STYLE, BUTTON_STYLE, SUCCESS_BUTTON_STYLE, 
-    ERROR_BUTTON_STYLE, CARD_STYLE, SUCCESS_BADGE_STYLE, ERROR_BADGE_STYLE,
-    PRIMARY_BLUE, SUCCESS_GREEN, ERROR_RED, LIGHT_GREY, DARK_GREY, BORDER_GREY,
-    FONT_SIZE_SMALL, WARNING_ORANGE
+    ERROR_BUTTON_STYLE, CARD_STYLE, SUCCESS_BADGE_STYLE, ERROR_BADGE_STYLE
 )
 
 
-class ProgressDisplayWidget(QWidget):
+class ProgressDisplayWidget(ThemedWidget):
     """
     Progress display widget with animated progress bar and real-time status updates
     Shows email sending progress with success/failure counters and detailed log
@@ -101,6 +100,9 @@ class ProgressDisplayWidget(QWidget):
         
     def create_progress_section(self):
         """Create the progress bar section"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         section = QFrame()
         section.setStyleSheet(CARD_STYLE)
         
@@ -113,7 +115,7 @@ class ProgressDisplayWidget(QWidget):
             QLabel {{
                 font-size: 16px;
                 font-weight: bold;
-                color: {DARK_GREY};
+                color: {theme['text_primary']};
                 text-align: center;
             }}
         """)
@@ -127,17 +129,17 @@ class ProgressDisplayWidget(QWidget):
         self.progress_bar.setValue(0)
         self.progress_bar.setStyleSheet(f"""
             QProgressBar {{
-                border: 2px solid {BORDER_GREY};
+                border: 2px solid {theme['border']};
                 border-radius: 8px;
-                background-color: {LIGHT_GREY};
+                background-color: {theme['surface_elevated']};
                 text-align: center;
                 font-weight: bold;
-                font-size: {FONT_SIZE_SMALL};
-                color: {DARK_GREY};
+                font-size: 12px;
+                color: {theme['text_primary']};
                 height: 25px;
             }}
             QProgressBar::chunk {{
-                background-color: {PRIMARY_BLUE};
+                background-color: {theme['primary']};
                 border-radius: 6px;
                 margin: 1px;
             }}
@@ -149,6 +151,9 @@ class ProgressDisplayWidget(QWidget):
         
     def create_status_section(self):
         """Create the current status section"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         section = QFrame()
         section.setStyleSheet(CARD_STYLE)
         
@@ -157,23 +162,23 @@ class ProgressDisplayWidget(QWidget):
         
         # Current email
         self.current_email_label = QLabel("Ready to start sending...")
-        self.current_email_label.setStyleSheet("""
-            QLabel {
+        self.current_email_label.setStyleSheet(f"""
+            QLabel {{
                 font-size: 14px;
-                color: #333333;
+                color: {theme['text_primary']};
                 font-weight: 500;
-            }
+            }}
         """)
         self.current_email_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.current_email_label)
         
         # Estimated time
         self.time_remaining_label = QLabel("")
-        self.time_remaining_label.setStyleSheet("""
-            QLabel {
+        self.time_remaining_label.setStyleSheet(f"""
+            QLabel {{
                 font-size: 12px;
-                color: #666666;
-            }
+                color: {theme['text_secondary']};
+            }}
         """)
         self.time_remaining_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.time_remaining_label)
@@ -183,6 +188,9 @@ class ProgressDisplayWidget(QWidget):
         
     def create_counters_section(self):
         """Create the success/failed counters section"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         section = QFrame()
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -190,13 +198,13 @@ class ProgressDisplayWidget(QWidget):
         
         # Success counter
         success_frame = QFrame()
-        success_frame.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border: 1px solid #E0E0E0;
+        success_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {theme['surface']};
+                border: 1px solid {theme['border']};
                 border-radius: 6px;
                 padding: 15px;
-            }
+            }}
         """)
         
         success_layout = QHBoxLayout()
@@ -209,12 +217,12 @@ class ProgressDisplayWidget(QWidget):
         success_layout.addWidget(self.success_badge)
         
         success_text = QLabel("Success")
-        success_text.setStyleSheet("""
-            QLabel {
+        success_text.setStyleSheet(f"""
+            QLabel {{
                 font-size: 16px;
                 font-weight: 500;
-                color: #333333;
-            }
+                color: {theme['text_primary']};
+            }}
         """)
         success_layout.addWidget(success_text)
         
@@ -223,13 +231,13 @@ class ProgressDisplayWidget(QWidget):
         
         # Failed counter
         failed_frame = QFrame()
-        failed_frame.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border: 1px solid #E0E0E0;
+        failed_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {theme['surface']};
+                border: 1px solid {theme['border']};
                 border-radius: 6px;
                 padding: 15px;
-            }
+            }}
         """)
         
         failed_layout = QHBoxLayout()
@@ -242,12 +250,12 @@ class ProgressDisplayWidget(QWidget):
         failed_layout.addWidget(self.failed_badge)
         
         failed_text = QLabel("Failed")
-        failed_text.setStyleSheet("""
-            QLabel {
+        failed_text.setStyleSheet(f"""
+            QLabel {{
                 font-size: 16px;
                 font-weight: 500;
-                color: #333333;
-            }
+                color: {theme['text_primary']};
+            }}
         """)
         failed_layout.addWidget(failed_text)
         
@@ -259,14 +267,17 @@ class ProgressDisplayWidget(QWidget):
         
     def create_log_section(self):
         """Create the scrollable log section"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         section = QFrame()
-        section.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border: 1px solid #E0E0E0;
+        section.setStyleSheet(f"""
+            QFrame {{
+                background-color: {theme['surface']};
+                border: 1px solid {theme['border']};
                 border-radius: 6px;
                 padding: 10px;
-            }
+            }}
         """)
         
         layout = QVBoxLayout()
@@ -274,16 +285,16 @@ class ProgressDisplayWidget(QWidget):
         
         # Log area
         self.log_area = QTextEdit()
-        self.log_area.setStyleSheet("""
-            QTextEdit {
+        self.log_area.setStyleSheet(f"""
+            QTextEdit {{
                 border: none;
-                background-color: #FAFAFA;
+                background-color: {theme['surface_elevated']};
                 font-family: 'Courier New', monospace;
                 font-size: 11px;
-                color: #333333;
+                color: {theme['text_primary']};
                 border-radius: 4px;
                 padding: 8px;
-            }
+            }}
         """)
         self.log_area.setReadOnly(True)
         self.log_area.setMinimumHeight(200)
@@ -295,6 +306,9 @@ class ProgressDisplayWidget(QWidget):
         
     def create_buttons_section(self):
         """Create the control buttons section"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         section = QFrame()
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 10, 0, 0)
@@ -305,20 +319,20 @@ class ProgressDisplayWidget(QWidget):
         self.pause_button = QPushButton("Pause Sending")
         self.pause_button.setStyleSheet(f"""
             QPushButton {{
-                background-color: {WARNING_ORANGE};
+                background-color: {theme['warning']};
                 color: white;
                 border: none;
                 padding: 12px 20px;
                 border-radius: 6px;
                 font-weight: bold;
-                font-size: {FONT_SIZE_SMALL};
+                font-size: 12px;
                 min-width: 120px;
             }}
             QPushButton:hover {{
-                background-color: #F57C00;
+                background-color: {theme['warning_hover']};
             }}
             QPushButton:pressed {{
-                background-color: #E65100;
+                background-color: {theme['warning_pressed']};
             }}
         """)
         layout.addWidget(self.pause_button)
@@ -442,26 +456,41 @@ class ProgressDisplayWidget(QWidget):
         
     def log_success(self, email):
         """Log a successful email send"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.success_count += 1
-        self.log_entry(f"✅ Sent to {email}", "#4CAF50")
+        self.log_entry(f"✅ Sent to {email}", theme['success'])
         self.update_counters()
         
     def log_failure(self, email, reason):
         """Log a failed email send"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.failed_count += 1
-        self.log_entry(f"❌ Failed to send to {email} - {reason}", "#F44336")
+        self.log_entry(f"❌ Failed to send to {email} - {reason}", theme['error'])
         self.update_counters()
         
     def log_info(self, message):
         """Log an info message"""
-        self.log_entry(f"ℹ️ {message}", "#2196F3")
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        self.log_entry(f"ℹ️ {message}", theme['primary'])
         
     def log_warning(self, message):
         """Log a warning message"""
-        self.log_entry(f"⚠️ {message}", "#FF9800")
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        self.log_entry(f"⚠️ {message}", theme['warning'])
         
-    def log_entry(self, message, color="#333333"):
+    def log_entry(self, message, color=None):
         """Add an entry to the log with timestamp"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        if color is None:
+            color = theme['text_primary']
+            
         timestamp = datetime.now().strftime("%H:%M:%S")
         html_message = f'<span style="color: {color};">[{timestamp}] {message}</span>'
         
@@ -475,11 +504,14 @@ class ProgressDisplayWidget(QWidget):
         
     def pause_sending(self):
         """Pause the sending process"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.is_paused = True
         self.pause_button.setText("Resume Sending")
-        self.pause_button.setStyleSheet("""
-            QPushButton {
-                background-color: #4CAF50;
+        self.pause_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {theme['success']};
                 color: white;
                 border: none;
                 padding: 12px 20px;
@@ -487,21 +519,24 @@ class ProgressDisplayWidget(QWidget):
                 font-weight: bold;
                 font-size: 12px;
                 min-width: 120px;
-            }
-            QPushButton:hover {
-                background-color: #388E3C;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {theme['success_hover']};
+            }}
         """)
         self.update_progress_display()
         self.log_warning("Sending paused by user")
         
     def resume_sending(self):
         """Resume the sending process"""
+        # Get current theme for styling
+        theme = self.get_current_theme()
+        
         self.is_paused = False
         self.pause_button.setText("Pause Sending")
-        self.pause_button.setStyleSheet("""
-            QPushButton {
-                background-color: #FF9800;
+        self.pause_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {theme['warning']};
                 color: white;
                 border: none;
                 padding: 12px 20px;
@@ -509,10 +544,10 @@ class ProgressDisplayWidget(QWidget):
                 font-weight: bold;
                 font-size: 12px;
                 min-width: 120px;
-            }
-            QPushButton:hover {
-                background-color: #F57C00;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {theme['warning_hover']};
+            }}
         """)
         self.update_progress_display()
         self.log_info("Sending resumed")

@@ -16,6 +16,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QSize, QTimer
 from PyQt5.QtGui import QFont, QIcon, QPalette
 
+# Import themed error dialogs
+from ui.error_dialogs import ThemedMessageBox, ErrorDialogManager
+
 # Import screens
 from ui.screens.upload_screen import UploadScreen
 from ui.screens.compose_screen import ComposeScreen  
@@ -227,27 +230,40 @@ class MainWindow(QMainWindow):
         """Initialize and add all screens to the stacked widget"""
         try:
             # Screen 1: Upload Contacts
+            print("Initializing Upload Screen...")
             self.upload_screen = UploadScreen()
             self.stacked_widget.addWidget(self.upload_screen)
+            print("✅ Upload Screen initialized successfully")
             
             # Screen 2: Compose Email  
+            print("Initializing Compose Screen...")
             self.compose_screen = ComposeScreen()
             self.stacked_widget.addWidget(self.compose_screen)
+            print("✅ Compose Screen initialized successfully")
             
             # Screen 3: Preview Campaign
+            print("Initializing Preview Screen...")
             self.preview_screen = PreviewScreen()
             self.stacked_widget.addWidget(self.preview_screen)
+            print("✅ Preview Screen initialized successfully")
             
             # Screen 4: Progress Display
+            print("Initializing Progress Screen...")
             self.progress_screen = ProgressScreen()
             self.stacked_widget.addWidget(self.progress_screen)
+            print("✅ Progress Screen initialized successfully")
             
             # Screen 5: Campaign Complete
+            print("Initializing Complete Screen...")
             self.complete_screen = CompleteScreen()
             self.stacked_widget.addWidget(self.complete_screen)
+            print("✅ Complete Screen initialized successfully")
             
         except Exception as e:
-            QMessageBox.critical(self, "Initialization Error", 
+            print(f"❌ Error during screen initialization: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            ThemedMessageBox.critical(self, "Initialization Error", 
                                f"Failed to initialize screens: {str(e)}")
     
     def setup_menu_bar(self):
@@ -491,7 +507,7 @@ class MainWindow(QMainWindow):
     def new_campaign(self):
         """Start a new campaign"""
         if self.current_screen_index != self.SCREEN_UPLOAD:
-            reply = QMessageBox.question(
+            reply = ThemedMessageBox.question(
                 self, 'New Campaign',
                 'Are you sure you want to start a new campaign? Any unsaved progress will be lost.',
                 QMessageBox.Yes | QMessageBox.No,
@@ -506,7 +522,7 @@ class MainWindow(QMainWindow):
     def close_application(self):
         """Handle application close request"""
         if self.current_screen_index in [self.SCREEN_PROGRESS]:
-            reply = QMessageBox.question(
+            reply = ThemedMessageBox.question(
                 self, 'Exit Application',
                 'A campaign is currently in progress. Are you sure you want to exit?',
                 QMessageBox.Yes | QMessageBox.No,
@@ -533,7 +549,7 @@ class MainWindow(QMainWindow):
     
     def show_about(self):
         """Show about dialog"""
-        QMessageBox.about(
+        ThemedMessageBox.information(
             self, 'About Mini Email CRM',
             '<h3>Mini Email CRM</h3>'
             '<p>Version 1.0.0</p>'
@@ -552,7 +568,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         """Handle window close event"""
         if self.current_screen_index == self.SCREEN_PROGRESS:
-            reply = QMessageBox.question(
+            reply = ThemedMessageBox.question(
                 self, 'Exit Application',
                 'A campaign is currently in progress. Are you sure you want to exit?',
                 QMessageBox.Yes | QMessageBox.No,

@@ -7,13 +7,15 @@ Enhanced with attachment functionality
 
 import os
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton, 
-    QLabel, QFrame, QGroupBox, QListWidget, QListWidgetItem,
-    QSizePolicy, QSpacerItem, QApplication, QFileDialog, QScrollArea,
-    QMessageBox
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QPushButton,
+    QFileDialog, QFrame, QListWidget, QListWidgetItem, QScrollArea, QSizePolicy,
+    QMessageBox, QSpacerItem
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QTimer, QMimeData, QUrl
-from PyQt5.QtGui import QFont, QTextCharFormat, QTextCursor, QPalette, QDragEnterEvent, QDropEvent
+from PyQt5.QtCore import Qt, pyqtSignal, QMimeData, QUrl, QTimer
+from PyQt5.QtGui import QFont, QPixmap, QDropEvent, QDragEnterEvent, QTextCursor
+
+# Import themed dialogs
+from ui.error_dialogs import ThemedMessageBox, ErrorDialogManager
 
 from ui.styles.stylesheet import (
     BUTTON_STYLE, INPUT_STYLE, CARD_STYLE, BODY_STYLE, SMALL_TEXT_STYLE,
@@ -513,7 +515,7 @@ class EmailEditor(QWidget):
         filename = os.path.basename(file_path)
         error_msg = f"Failed to attach '{filename}':\n\n" + "\n".join(errors)
         
-        msg_box = QMessageBox()
+        msg_box = ThemedMessageBox()
         msg_box.setIcon(QMessageBox.Warning)
         msg_box.setWindowTitle("Attachment Error")
         msg_box.setText(error_msg)

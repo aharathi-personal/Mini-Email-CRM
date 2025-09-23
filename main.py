@@ -11,8 +11,9 @@ import os
 import traceback
 import signal
 from PyQt5.QtWidgets import QApplication, QMessageBox, QSplashScreen
-from PyQt5.QtCore import Qt, QTimer, QStandardPaths, QDir
-from PyQt5.QtGui import QIcon, QPixmap, QPalette, QFont
+from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal, QStandardPaths
+from PyQt5.QtGui import QPixmap, QFont, QPalette, QIcon
+from ui.error_dialogs import ThemedMessageBox, ErrorDialogManager, apply_global_messagebox_theme
 
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -103,15 +104,28 @@ class MiniEmailCRMApplication:
             font.setStyleHint(QFont.SansSerif)
             self.app.setFont(font)
             
-            # Configure high DPI scaling
-            self.app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-            self.app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+            # High DPI scaling is now handled in initialize_application()
             
             # Apply dynamic theme-based stylesheet
             dynamic_stylesheet = stylesheet_generator.generate_stylesheet()
-            self.app.setStyleSheet(dynamic_stylesheet)
             
-            self.logger.info(f"Dynamic theme system initialized. Current theme: {theme_manager.get_current_theme_name()}")
+            # Test if the stylesheet can be parsed by Qt
+            from PyQt5.QtWidgets import QWidget
+            test_widget = QWidget()
+            test_widget.setStyleSheet(dynamic_stylesheet)
+            parsed_stylesheet = test_widget.styleSheet()
+            
+            if parsed_stylesheet and len(parsed_stylesheet.strip()) > 0:
+                # Stylesheet parsed successfully
+                self.app.setStyleSheet(dynamic_stylesheet)
+                self.logger.info(f"Dynamic theme system initialized. Current theme: {theme_manager.get_current_theme_name()}")
+            else:
+                # Stylesheet parsing failed, use fallback
+                self.logger.warning("Dynamic stylesheet parsing failed, using fallback styling")
+                self._setup_fallback_style()
+            
+            # Apply themed error dialogs
+            apply_global_messagebox_theme()
             
         except Exception as e:
             self.logger.warning(f"Could not initialize theme system, falling back to basic styling: {e}")
@@ -246,8 +260,12 @@ class MiniEmailCRMApplication:
     def initialize_application(self):
         """Initialize PyQt5 application with comprehensive configuration"""
         try:
-            # Create Qt Application
+            # Set Qt attributes BEFORE creating QApplication
+            # These must be set before QApplication instantiation
+            from PyQt5.QtCore import Qt
             self.app = QApplication(sys.argv)
+            self.app.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+            self.app.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
             
             # Set up logging first
             self.logger = setup_logger()
@@ -296,11 +314,11 @@ class MiniEmailCRMApplication:
             self.logger.error(error_msg)
             
             # Show error dialog to user
-            QMessageBox.critical(
+            ErrorDialogManager.show_error(
                 None, 
                 "Startup Error",
-                f"Failed to initialize the main window:\n\n{str(e)}\n\n"
-                f"Please check the logs for more details and contact support if the issue persists."
+                "Failed to initialize the main window. Please check the logs for more details and contact support if the issue persists.",
+                str(e)
             )
             return False
     
@@ -327,7 +345,7 @@ class MiniEmailCRMApplication:
         except Exception as e:
             error_msg = f"Failed to show main window: {str(e)}"
             self.logger.error(error_msg)
-            QMessageBox.critical(None, "Display Error", error_msg)
+            ThemedMessageBox.critical(None, "Display Error", error_msg)
             return False
     
     def hide_splash_screen(self):
@@ -401,7 +419,7 @@ class MiniEmailCRMApplication:
             
             # Show error dialog if app is available
             if self.app:
-                QMessageBox.critical(
+                ThemedMessageBox.critical(
                     None, 
                     "Critical Error",
                     f"A critical error occurred:\n\n{str(e)}\n\n"
@@ -421,6 +439,12 @@ def main():
     Task 21: Enhanced main function with comprehensive error handling and logging
     """
     try:
+        # Set Qt attributes BEFORE creating QApplication
+        # This must be done before QApplication is instantiated
+        from PyQt5.QtCore import Qt
+        import os
+        os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
+        
         # Create and run application
         app_instance = MiniEmailCRMApplication()
         exit_code = app_instance.run()

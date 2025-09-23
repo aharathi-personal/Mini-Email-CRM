@@ -13,6 +13,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QTimer, QThread, pyqtSignal as Signal
 from PyQt5.QtGui import QFont, QDragEnterEvent, QDropEvent, QPixmap, QIcon
 
+# Import themed error dialogs
+from ui.error_dialogs import ThemedMessageBox
+
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUBTITLE_STYLE, CARD_STYLE, SUCCESS_GREEN, ERROR_RED,
     DARK_GREY, LIGHT_GREY, BORDER_GREY, FONT_SIZE_SMALL, PRIMARY_BLUE,
@@ -715,7 +718,7 @@ class EnhancedAttachmentWidget(QWidget):
             return
             
         # Ask for confirmation
-        reply = QMessageBox.question(
+        reply = ThemedMessageBox.question(
             self,
             "Clear All Attachments",
             "Are you sure you want to remove all attachments?",

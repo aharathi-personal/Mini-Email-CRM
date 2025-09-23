@@ -24,8 +24,11 @@ from PyQt5.QtGui import QFont, QPixmap, QPainter, QPen, QBrush, QIcon, QColor
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from core.theme_manager import ThemeManager
 
+# Import ThemedWidget for theme compliance
+from ui.base.themed_widgets import ThemedWidget
 
-class CompleteScreen(QWidget):
+
+class CompleteScreen(ThemedWidget):
     """Enhanced complete screen with responsive design and campaign statistics"""
     
     # Signals for navigation
@@ -53,12 +56,23 @@ class CompleteScreen(QWidget):
         
         # Connect signals
         self.connect_signals()
+    
+    def get_theme_colors(self):
+        """Get current theme colors for consistent styling"""
+        current_theme = self.theme_manager.get_theme()
+        return {
+            'background': current_theme['background'],
+            'surface': current_theme['surface'],
+            'primary': current_theme['primary'],
+            'text_primary': current_theme['text_primary'],
+            'text_secondary': current_theme['text_secondary'],
+            'border': current_theme['border'],
+            'success': current_theme['success'],
+            'error': current_theme['error']
+        }
         
     def setup_ui(self):
         """Set up the complete screen UI to match the exact design"""
-        # Get theme colors for consistent styling throughout the UI
-        theme_colors = self.theme_manager.get_theme()
-        
         # Create scroll area for responsive design
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
@@ -81,26 +95,13 @@ class CompleteScreen(QWidget):
         
         # "Campaign Complete!" title
         self.completion_title = QLabel("Campaign Complete!")
-        self.completion_title.setStyleSheet(f"""
-            QLabel {{
-                font-size: 32px;
-                font-weight: bold;
-                color: {theme_colors['text_primary']};
-                margin: 20px 0px;
-            }}
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         self.completion_title.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.completion_title)
         
         # Campaign summary 
         self.campaign_summary = QLabel("Your email campaign has been completed successfully")
-        self.campaign_summary.setStyleSheet(f"""
-            QLabel {{
-                font-size: 16px;
-                color: {theme_colors['text_secondary']};
-                margin: 10px 0px;
-            }}
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         self.campaign_summary.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.campaign_summary)
 
@@ -110,37 +111,14 @@ class CompleteScreen(QWidget):
         
         # Duration display
         self.duration_label = QLabel("5 minutes")
-        self.duration_label.setStyleSheet(f"""
-            QLabel {{
-                font-size: 18px;
-                color: {theme_colors['text_secondary']};
-                font-weight: 500;
-                margin: 12px 0px;
-                padding: 2px 6px;
-            }}
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         self.duration_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(self.duration_label)
         
         # View Failed Emails button
         self.view_failed_btn = QPushButton("View Failed Emails")
         self.view_failed_btn.clicked.connect(self.on_view_failed_clicked)
-        self.view_failed_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #f5f5f5;
-                color: #333333;
-                border: 1px solid #cccccc;
-                border-radius: 6px;
-                padding: 10px 20px;
-                min-height: 36px;
-                font-size: 14px;
-                margin: 10px 0px;
-                min-width: 180px;
-            }
-            QPushButton:hover {
-                background-color: #eeeeee;
-            }
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         self.view_failed_btn.setMinimumHeight(36)
         self.view_failed_btn.setVisible(False)  # Hidden by default
         main_layout.addWidget(self.view_failed_btn, 0, Qt.AlignCenter)
@@ -148,23 +126,7 @@ class CompleteScreen(QWidget):
         # Primary action button - Send Another Campaign
         self.new_campaign_btn = QPushButton("Send Another Campaign")
         self.new_campaign_btn.clicked.connect(self.on_new_campaign_clicked)
-        self.new_campaign_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #4A90E2;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 12px 28px;
-                min-height: 40px;
-                font-size: 15px;
-                font-weight: bold;
-                margin: 8px 0px;
-                min-width: 220px;
-            }
-            QPushButton:hover {
-                background-color: #357ABD;
-            }
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         self.new_campaign_btn.setMinimumHeight(40)
         main_layout.addWidget(self.new_campaign_btn, 0, Qt.AlignCenter)
         
@@ -175,42 +137,14 @@ class CompleteScreen(QWidget):
         # Export Results button
         self.export_btn = QPushButton("Export Results")
         self.export_btn.clicked.connect(self.on_export_clicked)
-        self.export_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #f5f5f5;
-                color: #333333;
-                border: 1px solid #cccccc;
-                border-radius: 6px;
-                padding: 10px 20px;
-                min-height: 36px;
-                font-size: 14px;
-                min-width: 130px;
-            }
-            QPushButton:hover {
-                background-color: #eeeeee;
-            }
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         self.export_btn.setMinimumHeight(36)
         secondary_container.addWidget(self.export_btn)
         
         # Exit Application button
         self.exit_btn = QPushButton("Exit Application")
         self.exit_btn.clicked.connect(self.on_exit_clicked)
-        self.exit_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #f5f5f5;
-                color: #333333;
-                border: 1px solid #cccccc;
-                border-radius: 6px;
-                padding: 10px 20px;
-                min-height: 36px;
-                font-size: 14px;
-                min-width: 130px;
-            }
-            QPushButton:hover {
-                background-color: #eeeeee;
-            }
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         self.exit_btn.setMinimumHeight(36)
         secondary_container.addWidget(self.exit_btn)
         
@@ -246,21 +180,190 @@ class CompleteScreen(QWidget):
         self.success_value_label = CompatLabel(self.success_label) 
         self.failed_value_label = CompatLabel(self.failed_label)
         
+    def apply_theme_customizations(self):
+        """Apply custom theme-specific changes beyond stylesheets"""
+        theme = self.get_current_theme()
+        
+        # Apply theme to completion title
+        if hasattr(self, 'completion_title'):
+            self.completion_title.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 32px;
+                    font-weight: bold;
+                    color: {theme['text_primary']};
+                    margin: 20px 0px;
+                }}
+            """)
+        
+        # Apply theme to campaign summary
+        if hasattr(self, 'campaign_summary'):
+            self.campaign_summary.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 16px;
+                    color: {theme['text_secondary']};
+                    margin: 10px 0px;
+                }}
+            """)
+        
+        # Apply theme to duration label
+        if hasattr(self, 'duration_label'):
+            self.duration_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 18px;
+                    color: {theme['text_secondary']};
+                    font-weight: 500;
+                    margin: 12px 0px;
+                    padding: 2px 6px;
+                }}
+            """)
+        
+        # Apply theme to checkmark
+        if hasattr(self, 'checkmark_widget'):
+            self.checkmark_widget.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 40px;
+                    color: white;
+                    background-color: {theme['success']};
+                    border-radius: 35px;
+                    min-width: 70px;
+                    min-height: 70px;
+                    max-width: 70px;
+                    max-height: 70px;
+                }}
+            """)
+        
+        # Apply theme to view failed button
+        if hasattr(self, 'view_failed_btn'):
+            self.view_failed_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {theme['surface']};
+                    color: {theme['text_primary']};
+                    border: 1px solid {theme['border']};
+                    border-radius: 6px;
+                    padding: 10px 20px;
+                    min-height: 36px;
+                    font-size: 14px;
+                    margin: 10px 0px;
+                    min-width: 180px;
+                }}
+                QPushButton:hover {{
+                    background-color: {theme.get('hover_background', theme['border'])};
+                }}
+            """)
+        
+        # Apply theme to new campaign button (primary)
+        if hasattr(self, 'new_campaign_btn'):
+            self.new_campaign_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {theme['primary']};
+                    color: {theme.get('primary_text', 'white')};
+                    border: none;
+                    border-radius: 6px;
+                    padding: 12px 28px;
+                    min-height: 40px;
+                    font-size: 15px;
+                    font-weight: bold;
+                    margin: 8px 0px;
+                    min-width: 220px;
+                }}
+                QPushButton:hover {{
+                    background-color: {theme.get('primary_hover', theme['primary'])};
+                }}
+            """)
+        
+        # Apply theme to export button
+        if hasattr(self, 'export_btn'):
+            self.export_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {theme['surface']};
+                    color: {theme['text_primary']};
+                    border: 1px solid {theme['border']};
+                    border-radius: 6px;
+                    padding: 10px 20px;
+                    min-height: 36px;
+                    font-size: 14px;
+                    min-width: 130px;
+                }}
+                QPushButton:hover {{
+                    background-color: {theme.get('hover_background', theme['border'])};
+                }}
+            """)
+        
+        # Apply theme to exit button
+        if hasattr(self, 'exit_btn'):
+            self.exit_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background-color: {theme['surface']};
+                    color: {theme['text_primary']};
+                    border: 1px solid {theme['border']};
+                    border-radius: 6px;
+                    padding: 10px 20px;
+                    min-height: 36px;
+                    font-size: 14px;
+                    min-width: 130px;
+                }}
+                QPushButton:hover {{
+                    background-color: {theme.get('hover_background', theme['border'])};
+                }}
+            """)
+        
+        # Update statistics displays
+        self.update_stats_theme_colors()
+        
+    def update_stats_theme_colors(self):
+        """Update statistics display colors with current theme"""
+        theme = self.get_current_theme()
+        
+        # Update total display
+        if hasattr(self, 'total_display'):
+            self.total_display.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 22px;
+                    color: {theme['text_primary']};
+                    font-weight: 600;
+                    margin: 8px 0px;
+                    padding: 2px 6px;
+                }}
+            """)
+        
+        # Update success display
+        if hasattr(self, 'success_display'):
+            self.success_display.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 22px;
+                    color: {theme['success']};
+                    font-weight: 700;
+                    margin: 8px 0px;
+                    padding: 2px 6px;
+                }}
+            """)
+        
+        # Update failed display
+        if hasattr(self, 'failed_display'):
+            self.failed_display.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 22px;
+                    color: {theme['error']};
+                    font-weight: 700;
+                    margin: 8px 0px;
+                    padding: 2px 6px;
+                }}
+            """)
+        
+        # Update hidden compatibility labels
+        if hasattr(self, 'total_label'):
+            self.total_label.setStyleSheet(f"font-size: 18px; color: {theme['text_primary']};")
+        
+        if hasattr(self, 'success_label'):
+            self.success_label.setStyleSheet(f"font-size: 18px; color: {theme['success']};")
+        
+        if hasattr(self, 'failed_label'):
+            self.failed_label.setStyleSheet(f"font-size: 18px; color: {theme['error']};")
+        
     def create_checkmark(self):
         """Create the green checkmark circle"""
         checkmark = QLabel("✓")
-        checkmark.setStyleSheet("""
-            QLabel {
-                font-size: 40px;
-                color: white;
-                background-color: #5CB85C;
-                border-radius: 35px;
-                min-width: 70px;
-                min-height: 70px;
-                max-width: 70px;
-                max-height: 70px;
-            }
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         checkmark.setAlignment(Qt.AlignCenter)
         return checkmark
         
@@ -272,62 +375,35 @@ class CompleteScreen(QWidget):
         layout.setAlignment(Qt.AlignCenter)
         layout.setContentsMargins(40, 20, 40, 20)
         
-        # Get theme colors for dynamic styling
-        theme_colors = self.theme_manager.get_theme()
-        
         # Total emails - large centered text
         self.total_display = QLabel("100 total emails attempted")
-        self.total_display.setStyleSheet(f"""
-            QLabel {{
-                font-size: 22px;
-                color: {theme_colors['text_primary']};
-                font-weight: 600;
-                margin: 8px 0px;
-                padding: 2px 6px;
-            }}
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         self.total_display.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.total_display)
         
         # Successfully sent - green text
         self.success_display = QLabel("85 successfully sent")
-        self.success_display.setStyleSheet(f"""
-            QLabel {{
-                font-size: 22px;
-                color: {theme_colors['success']};
-                font-weight: 700;
-                margin: 8px 0px;
-                padding: 2px 6px;
-            }}
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         self.success_display.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.success_display)
         
         # Failed - red text
         self.failed_display = QLabel("15 failed")
-        self.failed_display.setStyleSheet(f"""
-            QLabel {{
-                font-size: 22px;
-                color: {theme_colors['error']};
-                font-weight: 700;
-                margin: 8px 0px;
-                padding: 2px 6px;
-            }}
-        """)
+        # Theme styling will be applied by apply_theme_customizations()
         self.failed_display.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.failed_display)
         
         # Create hidden compatibility labels for tests
         self.total_label = QLabel("100 total emails attempted")
-        self.total_label.setStyleSheet("font-size: 18px; color: #333333;")
+        # Theme styling will be applied by apply_theme_customizations()
         self.total_label.setVisible(False)
         
         self.success_label = QLabel("85 successfully sent") 
-        self.success_label.setStyleSheet("font-size: 18px; color: #5CB85C;")
+        # Theme styling will be applied by apply_theme_customizations()
         self.success_label.setVisible(False)
         
         self.failed_label = QLabel("15 failed")
-        self.failed_label.setStyleSheet("font-size: 18px; color: #D9534F;")
+        # Theme styling will be applied by apply_theme_customizations()
         self.failed_label.setVisible(False)
         
         container.setLayout(layout)
