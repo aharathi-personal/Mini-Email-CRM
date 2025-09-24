@@ -23,7 +23,8 @@ from PyQt5.QtGui import QFont, QTextCursor
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUCCESS_BUTTON_STYLE, ERROR_BUTTON_STYLE,
     CARD_STYLE, TITLE_STYLE, SUBTITLE_STYLE, BODY_STYLE,
-    SUCCESS_BADGE_STYLE, ERROR_BADGE_STYLE, FONT_SIZE_SMALL
+    SUCCESS_BADGE_STYLE, ERROR_BADGE_STYLE, FONT_SIZE_SMALL,
+    SURFACE, SURFACE_ELEVATED, SURFACE_CONTAINER, TEXT_SECONDARY, PRIMARY_HOVER, SUCCESS_HOVER
 )
 
 # Import ThemedWidget for theme support
@@ -368,7 +369,7 @@ class ProgressScreen(ThemedWidget):
                     min-width: 80px;
                 }}
                 QPushButton:hover {{
-                    background-color: #388E3C;
+                    background-color: {SUCCESS_HOVER};
                 }}
             """)
         
@@ -1365,9 +1366,13 @@ class ProgressScreen(ThemedWidget):
         theme = self.get_current_theme()
         self.log_entry(f"⚠️ {message}", theme['warning'])
         
-    def log_entry(self, message, color="#333333"):
+    def log_entry(self, message, color=None):
         """Add an entry to the log with timestamp"""
         timestamp = datetime.now().strftime("%H:%M:%S")
+        # Resolve default color from theme when not provided
+        if color is None:
+            theme = self.get_current_theme()
+            color = theme.get('text_primary', '#333333')
         html_message = f'<span style="color: {color};">[{timestamp}] {message}</span>'
         
         # Add to log

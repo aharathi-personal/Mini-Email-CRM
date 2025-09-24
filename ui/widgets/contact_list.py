@@ -14,7 +14,7 @@ from PyQt5.QtGui import QFont, QPalette
 from ui.styles.stylesheet import (
     INPUT_STYLE, CARD_STYLE, SUBTITLE_STYLE,
     PRIMARY_BLUE, BORDER_GREY, DARK_GREY, LIGHT_GREY,
-    FONT_SIZE_SMALL
+    FONT_SIZE_SMALL, SURFACE, TEXT_SECONDARY, SELECTION, SURFACE_ELEVATED, PRIMARY_HOVER
 )
 
 
@@ -58,7 +58,7 @@ class ContactListWidget(QWidget):
         search_frame = QFrame()
         search_frame.setStyleSheet(f"""
             QFrame {{
-                background-color: white;
+                background-color: {SURFACE};
                 border: 1px solid {BORDER_GREY};
                 border-radius: 4px;
                 padding: 2px;
@@ -93,7 +93,7 @@ class ContactListWidget(QWidget):
                 padding: 4px 0;
             }}
             QLineEdit::placeholder {{
-                color: #999999;
+                color: {TEXT_SECONDARY};
             }}
         """)
         layout.addWidget(self.search_input)
@@ -108,25 +108,25 @@ class ContactListWidget(QWidget):
             QListWidget {{
                 border: 1px solid {BORDER_GREY};
                 border-radius: 4px;
-                background-color: white;
-                selection-background-color: #E3F2FD;
+                background-color: {SURFACE};
+                selection-background-color: {SELECTION};
                 selection-color: {DARK_GREY};
                 outline: none;
             }}
             QListWidget::item {{
                 padding: 12px;
-                border-bottom: 1px solid #F0F0F0;
+                border-bottom: 1px solid {BORDER_GREY};
                 color: {DARK_GREY};
             }}
             QListWidget::item:hover {{
                 background-color: {LIGHT_GREY};
             }}
             QListWidget::item:selected {{
-                background-color: #E3F2FD;
+                background-color: {SELECTION};
                 color: {DARK_GREY};
             }}
             QListWidget::item:selected:hover {{
-                background-color: #BBDEFB;
+                background-color: {PRIMARY_HOVER};
             }}
         """)
         
@@ -381,7 +381,7 @@ if __name__ == "__main__":
     info_label = QLabel("Select a contact to see details here")
     info_label.setStyleSheet(f"""
         QLabel {{
-            background-color: {LIGHT_GREY};
+            background-color: {SURFACE_ELEVATED};
             border: 1px solid {BORDER_GREY};
             border-radius: 4px;
             padding: 20px;

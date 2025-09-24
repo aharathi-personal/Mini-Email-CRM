@@ -19,7 +19,7 @@ from ui.error_dialogs import ThemedMessageBox
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUBTITLE_STYLE, CARD_STYLE, SUCCESS_GREEN, ERROR_RED,
     DARK_GREY, LIGHT_GREY, BORDER_GREY, FONT_SIZE_SMALL, PRIMARY_BLUE,
-    WARNING_ORANGE
+    WARNING_ORANGE, SURFACE, SURFACE_ELEVATED, TEXT_SECONDARY, PRIMARY_HOVER
 )
 from models.attachment import Attachment, AttachmentManager, AttachmentType
 
@@ -148,7 +148,7 @@ class AttachmentItemWidget(QWidget):
         details_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 9px;
-                color: #888;
+                color: {TEXT_SECONDARY};
             }}
         """)
         info_layout.addWidget(details_label)
@@ -169,7 +169,7 @@ class AttachmentItemWidget(QWidget):
                 font-weight: bold;
             }}
             QPushButton:hover {{
-                background-color: #d32f2f;
+                background-color: {PRIMARY_HOVER};
             }}
         """)
         remove_btn.clicked.connect(lambda: self.remove_requested.emit(self.attachment.filename))
@@ -178,14 +178,14 @@ class AttachmentItemWidget(QWidget):
         # Set main widget style
         self.setStyleSheet(f"""
             QWidget {{
-                background-color: white;
+                background-color: {SURFACE};
                 border: 1px solid {BORDER_GREY};
                 border-radius: 6px;
                 margin: 2px;
             }}
             QWidget:hover {{
                 border-color: {PRIMARY_BLUE};
-                background-color: #f8f9fa;
+                background-color: {SURFACE_ELEVATED};
             }}
         """)
         
@@ -314,7 +314,7 @@ class EnhancedAttachmentWidget(QWidget):
         self.summary_label.setStyleSheet(f"""
             QLabel {{
                 font-size: {FONT_SIZE_SMALL};
-                color: #666;
+                color: {TEXT_SECONDARY};
                 font-style: italic;
             }}
         """)
@@ -327,7 +327,7 @@ class EnhancedAttachmentWidget(QWidget):
         help_label.setStyleSheet(f"""
             QLabel {{
                 font-size: 10px;
-                color: #888;
+                color: {TEXT_SECONDARY};
                 margin-bottom: 4px;
             }}
         """)
@@ -393,13 +393,13 @@ class EnhancedAttachmentWidget(QWidget):
         """Update drop zone styling"""
         if is_error:
             border_color = ERROR_RED
-            bg_color = "#ffebee"
+            bg_color = SURFACE_ELEVATED
         elif is_drag_active:
             border_color = PRIMARY_BLUE
-            bg_color = "#e3f2fd"
+            bg_color = SURFACE_ELEVATED
         else:
             border_color = BORDER_GREY
-            bg_color = "#f8f9fa"
+            bg_color = SURFACE
         
         border_style = "solid" if is_drag_active else "dashed"
         
@@ -460,7 +460,7 @@ class EnhancedAttachmentWidget(QWidget):
             QFrame {{
                 border: 1px solid {PRIMARY_BLUE};
                 border-radius: 6px;
-                background-color: #e3f2fd;
+                background-color: {SURFACE_ELEVATED};
                 padding: 8px;
             }}
         """)
@@ -516,7 +516,7 @@ class EnhancedAttachmentWidget(QWidget):
             QScrollArea {{
                 border: 1px solid {BORDER_GREY};
                 border-radius: 6px;
-                background-color: white;
+                background-color: {SURFACE};
             }}
         """)
         
@@ -540,7 +540,7 @@ class EnhancedAttachmentWidget(QWidget):
             QFrame {{
                 border: 1px solid {BORDER_GREY};
                 border-radius: 6px;
-                background-color: {LIGHT_GREY};
+                background-color: {SURFACE_ELEVATED};
                 padding: 6px;
             }}
         """)
@@ -553,7 +553,7 @@ class EnhancedAttachmentWidget(QWidget):
         self.detailed_summary.setStyleSheet(f"""
             QLabel {{
                 font-size: 10px;
-                color: #666;
+                color: {TEXT_SECONDARY};
             }}
         """)
         layout.addWidget(self.detailed_summary)

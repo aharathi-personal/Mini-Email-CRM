@@ -4,14 +4,65 @@ Defines color scheme, typography, spacing, and widget styles
 Follows UI Design Guidelines
 """
 
-PRIMARY_BLUE = "#2196F3"
-SUCCESS_GREEN = "#4CAF50"
-ERROR_RED = "#F44336"
-LIGHT_GREY = "#F5F5F5"
-DARK_GREY = "#333333"
-BORDER_GREY = "#DDDDDD"
-DISABLED_GREY = "#CCCCCC"
-WARNING_ORANGE = "#FF9800"
+# Prefer theme-managed colors when available. Fall back to these defaults.
+_DEFAULTS = {
+    "primary": "#2196F3",
+    "success": "#4CAF50",
+    "error": "#F44336",
+    "background": "#F5F5F5",
+    "text_primary": "#333333",
+    "border": "#DDDDDD",
+    "disabled": "#CCCCCC",
+    "warning": "#FF9800",
+}
+
+# Attempt to import ThemeManager and read the current theme. If unavailable,
+# fall back to the static defaults above so existing code keeps working.
+try:
+    from core.theme_manager import ThemeManager
+
+    _theme = ThemeManager.instance().get_theme()
+    PRIMARY_BLUE = _theme.get("primary", _DEFAULTS["primary"])
+    SUCCESS_GREEN = _theme.get("success", _DEFAULTS["success"])
+    ERROR_RED = _theme.get("error", _DEFAULTS["error"])
+    LIGHT_GREY = _theme.get("background", _DEFAULTS["background"])
+    DARK_GREY = _theme.get("text_primary", _DEFAULTS["text_primary"])
+    BORDER_GREY = _theme.get("border", _DEFAULTS["border"])
+    DISABLED_GREY = _theme.get("disabled", _DEFAULTS["disabled"])
+    WARNING_ORANGE = _theme.get("warning", _DEFAULTS["warning"])
+except Exception:
+    # Theme system not initialized or import failed; use defaults
+    PRIMARY_BLUE = _DEFAULTS["primary"]
+    SUCCESS_GREEN = _DEFAULTS["success"]
+    ERROR_RED = _DEFAULTS["error"]
+    LIGHT_GREY = _DEFAULTS["background"]
+    DARK_GREY = _DEFAULTS["text_primary"]
+    BORDER_GREY = _DEFAULTS["border"]
+    DISABLED_GREY = _DEFAULTS["disabled"]
+    WARNING_ORANGE = _DEFAULTS["warning"]
+
+# Additional theme-derived tokens for wider coverage in existing styles
+try:
+    _theme = ThemeManager.instance().get_theme()
+    SURFACE = _theme.get("surface", LIGHT_GREY)
+    SURFACE_ELEVATED = _theme.get("surface_elevated", SURFACE)
+    SURFACE_CONTAINER = _theme.get("surface_container", SURFACE)
+    TEXT_SECONDARY = _theme.get("text_secondary", "#666666")
+    TEXT_TERTIARY = _theme.get("text_tertiary", "#9E9E9E")
+    PRIMARY_HOVER = _theme.get("primary_hover", PRIMARY_BLUE)
+    SUCCESS_HOVER = _theme.get("success_hover", SUCCESS_GREEN)
+    WARNING_HOVER = _theme.get("warning_hover", WARNING_ORANGE)
+    SELECTION = _theme.get("selection", "#E3F2FD")
+except Exception:
+    SURFACE = LIGHT_GREY
+    SURFACE_ELEVATED = LIGHT_GREY
+    SURFACE_CONTAINER = LIGHT_GREY
+    TEXT_SECONDARY = "#666666"
+    TEXT_TERTIARY = "#9E9E9E"
+    PRIMARY_HOVER = PRIMARY_BLUE
+    SUCCESS_HOVER = SUCCESS_GREEN
+    WARNING_HOVER = WARNING_ORANGE
+    SELECTION = "#E3F2FD"
 
 FONT_FAMILY = "Arial, Helvetica, sans-serif"
 FONT_SIZE = "14px"
@@ -112,7 +163,7 @@ QPushButton:pressed {{
 # --- Input Styles ---
 INPUT_STYLE = f"""
 QLineEdit, QTextEdit {{
-    background-color: white;
+    background-color: {SURFACE_ELEVATED};
     border: 1px solid {BORDER_GREY};
     border-radius: {BORDER_RADIUS};
     padding: 8px;
@@ -146,7 +197,7 @@ QWidget, QFrame {{
 
 CARD_STYLE = f"""
 QFrame {{
-    background-color: white;
+    background-color: {SURFACE};
     border: 1px solid {BORDER_GREY};
     border-radius: {BORDER_RADIUS};
     padding: {SPACING_MEDIUM};
@@ -237,5 +288,8 @@ __all__ = [
     "BUTTON_STYLE", "SUCCESS_BUTTON_STYLE", "ERROR_BUTTON_STYLE", "WARNING_BUTTON_STYLE",
     "INPUT_STYLE", "CONTAINER_STYLE", "CARD_STYLE",
     "TITLE_STYLE", "SUBTITLE_STYLE", "BODY_STYLE", "SMALL_TEXT_STYLE",
-    "SUCCESS_BADGE_STYLE", "ERROR_BADGE_STYLE", "SPACING_STYLE"
+    "SUCCESS_BADGE_STYLE", "ERROR_BADGE_STYLE", "SPACING_STYLE",
+    # Additional tokens
+    "SURFACE", "SURFACE_ELEVATED", "SURFACE_CONTAINER", "TEXT_SECONDARY", "TEXT_TERTIARY",
+    "PRIMARY_HOVER", "SUCCESS_HOVER", "WARNING_HOVER", "SELECTION"
 ]

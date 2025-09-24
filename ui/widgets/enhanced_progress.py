@@ -14,7 +14,7 @@ from PyQt5.QtGui import QFont, QPalette, QMovie, QPixmap, QPainter, QColor
 from ui.styles.stylesheet import (
     BUTTON_STYLE, SUBTITLE_STYLE, CARD_STYLE, SUCCESS_GREEN, ERROR_RED,
     DARK_GREY, LIGHT_GREY, BORDER_GREY, FONT_SIZE_SMALL, PRIMARY_BLUE,
-    WARNING_ORANGE
+    WARNING_ORANGE, SURFACE, SURFACE_ELEVATED, TEXT_SECONDARY, PRIMARY_HOVER
 )
 
 
@@ -35,12 +35,12 @@ class AnimatedProgressBar(QProgressBar):
                 border-radius: 8px;
                 text-align: center;
                 font-weight: bold;
-                background-color: white;
+                background-color: {SURFACE};
                 height: 24px;
             }}
             QProgressBar::chunk {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 {PRIMARY_BLUE}, stop:0.5 #42a5f5, stop:1 {PRIMARY_BLUE});
+                    stop:0 {PRIMARY_BLUE}, stop:0.5 {PRIMARY_HOVER}, stop:1 {PRIMARY_BLUE});
                 border-radius: 6px;
                 margin: 1px;
             }}
@@ -96,7 +96,7 @@ class ProgressStepWidget(QWidget):
             self.desc_label.setStyleSheet(f"""
                 QLabel {{
                     font-size: 10px;
-                    color: #888;
+                    color: {TEXT_SECONDARY};
                 }}
             """)
             self.desc_label.setWordWrap(True)
@@ -217,7 +217,7 @@ class EnhancedProgressWidget(QWidget):
         self.subtitle.setStyleSheet(f"""
             QLabel {{
                 font-size: {FONT_SIZE_SMALL};
-                color: #666;
+                color: {TEXT_SECONDARY};
                 margin-bottom: 8px;
             }}
         """)
@@ -250,7 +250,7 @@ class EnhancedProgressWidget(QWidget):
         self.time_label.setStyleSheet(f"""
             QLabel {{
                 font-size: {FONT_SIZE_SMALL};
-                color: #888;
+                color: {TEXT_SECONDARY};
             }}
         """)
         info_layout.addWidget(self.time_label)
@@ -290,7 +290,7 @@ class EnhancedProgressWidget(QWidget):
                     min-width: 80px;
                 }}
                 QPushButton:hover {{
-                    background-color: #e68a00;
+                    background-color: {PRIMARY_HOVER};
                 }}
                 QPushButton:disabled {{
                     background-color: {BORDER_GREY};

@@ -369,29 +369,31 @@ class EmailEditor(QWidget):
         self.attachment_scroll.setMaximumHeight(120)  # Limit height to ~4 attachment items
         self.attachment_scroll.setMinimumHeight(0)    # Allow shrinking when no attachments
         self.attachment_scroll.setVisible(False)      # Hidden by default
-        self.attachment_scroll.setStyleSheet("""
-            QScrollArea {
+        # Use theme values for scrollbars so they match light/dark themes
+        colors = self.get_theme_colors()
+        self.attachment_scroll.setStyleSheet(f"""
+            QScrollArea {{
                 background-color: transparent;
                 border: none;
                 margin: 0px;
                 padding: 0px;
-            }
-            QScrollBar:vertical {
-                background-color: #F8F9FA;
+            }}
+            QScrollBar:vertical {{
+                background-color: {colors['surface']};
                 width: 8px;
                 border-radius: 4px;
-            }
-            QScrollBar::handle:vertical {
-                background-color: #DADCE0;
+            }}
+            QScrollBar::handle:vertical {{
+                background-color: {colors['border']};
                 border-radius: 4px;
                 min-height: 20px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background-color: #BBBDBF;
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+            }}
+            QScrollBar::handle:vertical:hover {{
+                background-color: {colors['border']};
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 height: 0px;
-            }
+            }}
         """)
         
         # Container widget for attachment items
