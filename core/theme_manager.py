@@ -74,20 +74,36 @@ class ThemeManager(QObject):
     
     def _get_default_themes(self) -> Dict[str, Dict[str, str]]:
         """Return default theme configurations if themes.json is not available"""
+        # Provide a more complete set of theme tokens used across the UI so
+        # missing or minimal themes.json files do not cause KeyError during
+        # styling lookups.
         return {
             "light": {
                 "primary": "#2196F3",
                 "primary_hover": "#1976D2",
                 "primary_pressed": "#1565C0",
                 "success": "#4CAF50",
+                "success_hover": "#388E3C",
+                "success_pressed": "#2E7D32",
                 "error": "#F44336",
                 "warning": "#FF9800",
+                "warning_hover": "#FB8C00",
+                "warning_pressed": "#F57C00",
                 "background": "#F5F5F5",
                 "surface": "#FFFFFF",
+                "surface_elevated": "#FAFAFA",
+                "surface_container": "#FFFFFF",
+                "surface_hover": "#F0F0F0",
                 "text_primary": "#333333",
-                "text_secondary": "#9E9E9E",
+                "text_secondary": "#666666",
+                "text_tertiary": "#9E9E9E",
+                "text_placeholder": "#BDBDBD",
+                "text_disabled": "#9E9E9E",
                 "border": "#DDDDDD",
-                "disabled": "#CCCCCC",
+                "border_focus": "#90CAF9",
+                "disabled": "#E0E0E0",
+                "disabled_background": "#F0F0F0",
+                "hover_overlay": "#F3F7FB",
                 "attachment_bg": "#E3F2FD",
                 "selection": "#E3F2FD"
             },
@@ -96,14 +112,27 @@ class ThemeManager(QObject):
                 "primary_hover": "#42A5F5",
                 "primary_pressed": "#2196F3",
                 "success": "#66BB6A",
+                "success_hover": "#4CAF50",
+                "success_pressed": "#388E3C",
                 "error": "#EF5350",
                 "warning": "#FFB74D",
+                "warning_hover": "#FFB74D",
+                "warning_pressed": "#FFA726",
                 "background": "#121212",
                 "surface": "#1E1E1E",
+                "surface_elevated": "#2A2A2A",
+                "surface_container": "#232323",
+                "surface_hover": "#2C2C2C",
                 "text_primary": "#FFFFFF",
                 "text_secondary": "#AAAAAA",
+                "text_tertiary": "#9E9E9E",
+                "text_placeholder": "#757575",
+                "text_disabled": "#555555",
                 "border": "#333333",
-                "disabled": "#555555",
+                "border_focus": "#64B5F6",
+                "disabled": "#3A3A3A",
+                "disabled_background": "#2B2B2B",
+                "hover_overlay": "#1F1F1F",
                 "attachment_bg": "#263238",
                 "selection": "#263238"
             }
@@ -199,8 +228,15 @@ class ThemeManager(QObject):
         """Get theme configuration"""
         if theme_name is None:
             theme_name = self.current_theme or "light"
-        
-        return self.themes.get(theme_name, self.themes["light"])
+        # Return a theme dict merged with the defaults so missing tokens from
+        # a user-provided themes.json don't cause KeyError elsewhere.
+        loaded = self.themes.get(theme_name, {})
+        defaults = self._get_default_themes().get(theme_name, {})
+
+        # Merge defaults with loaded values (loaded takes precedence)
+        merged = defaults.copy()
+        merged.update(loaded)
+        return merged
     
     def get_current_theme_name(self) -> str:
         """Get the current theme name"""

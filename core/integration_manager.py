@@ -334,8 +334,9 @@ class IntegrationManager:
         
         # Check email service connectivity
         try:
-            if not self.email_service.test_connection():
-                result.add_warning("Email service connection test failed")
+            conn_success, conn_error = self.email_service.test_connection()
+            if not conn_success:
+                result.add_warning(f"Email service connection test failed: {conn_error}")
         except Exception as e:
             result.add_warning(f"Cannot test email service: {e}")
         

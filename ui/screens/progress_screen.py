@@ -76,71 +76,43 @@ class ProgressScreen(ThemedWidget):
         self.total_emails = 0
         self.current_progress = 0
         self.success_count = 0
-        self.failed_count = 0
-        self.attachment_failures = 0
-        self.failed_emails = []  # List to track failed email addresses
-        
-        # State tracking
+        theme = self.get_current_theme()
+
+        # Build the UI now so widgets (like progress_bar) exist before any
+        # simulation or campaign start. This prevents AttributeError when
+        # start_simulation/start_campaign is invoked immediately after
+        # constructing the screen (as happens in some demos/tests).
+        self.setup_ui()
+
+        # Initialize runtime state and timers
+        # Timer callback will be connected dynamically in start_campaign depending on
+        # whether this is a real campaign or a demo simulation.
+        self.simulation_timer = QTimer(self)
+        # Timer callback is not connected here; start_campaign decides which handler to use.
+        self.simulation_active = False
+        self.progress_animation = None
+        self.failed_emails = []
+        self.current_email = ""
+        self.estimated_time = ""
         self.is_paused = False
         self.is_cancelled = False
         self.is_completed = False
-        self.current_email = ""
-        self.estimated_time = ""
-        
-        # Animation
-        self.progress_animation = None
-        
-        # Progress simulation timer (for demo purposes) - also used for real sending
-        self.simulation_timer = QTimer()
-        self.simulation_timer.timeout.connect(self.send_next_email)  # Changed from simulate_next_email
-        self.simulation_active = False
-        
-        self.setup_ui()
-        self.connect_signals()
-    
-    def get_current_theme(self) -> dict:
-        """Get the current theme configuration with safe fallback"""
-        if not hasattr(self, 'theme_manager') or self.theme_manager is None:
-            # Provide safe fallback during initialization
-            return {
-                'background': '#ffffff',
-                'surface': '#f5f5f5', 
-                'surface_elevated': '#f8f8f8',
-                'surface_hover': '#e8f4fd',
-                'primary': '#0066cc',
-                'text_primary': '#000000',
-                'text_secondary': '#666666',
-                'border': '#cccccc',
-                'success': '#28a745',
-                'error': '#dc3545',
-                'warning': '#ffc107'
-            }
-        theme = self.theme_manager.get_theme()
-        # Ensure all required keys exist
-        required_keys = ['background', 'surface', 'surface_elevated', 'surface_hover', 'primary', 'text_primary', 'text_secondary', 'border', 'success', 'error', 'warning']
-        for key in required_keys:
-            if key not in theme:
-                theme[key] = '#cccccc'  # Default fallback
-        return theme
-    
-    def apply_theme_customizations(self):
-        """Apply theme-aware colors to all UI elements"""
-        theme = self.get_current_theme()
-        
-        # Update navigation buttons
+
+        # Update navigation buttons (if present) with proper styles now that
+        # widgets are available
         if hasattr(self, 'prev_contact_btn'):
             self._update_navigation_button_style(self.prev_contact_btn)
         if hasattr(self, 'next_contact_btn'):
             self._update_navigation_button_style(self.next_contact_btn)
-        
+
         # Update all themed buttons
         if hasattr(self, 'themed_buttons'):
             for button_info in self.themed_buttons:
                 button, button_type = button_info
                 if hasattr(button, 'isVisible') and button.isVisible():
                     self._apply_button_theme(button, button_type)
-        
-        # Update all hardcoded colors with theme-aware colors
+
+        # Apply theme-aware styles to the newly created widgets
         self._apply_theme_to_hardcoded_elements()
     
     def _update_navigation_button_style(self, button):
@@ -299,38 +271,6 @@ class ProgressScreen(ThemedWidget):
                     font-size: 14px;
                     font-weight: 500;
                     color: {theme['text_primary']};
-                }}
-            """)
-        
-        # Update attachment progress section
-        if hasattr(self, 'attachment_progress_section'):
-            self.attachment_progress_section.setStyleSheet(f"""
-                QFrame {{
-                    background-color: {theme['surface_container']};
-                    border: 1px solid {theme['primary']};
-                    border-radius: 6px;
-                    padding: 10px;
-                }}
-            """)
-        
-        # Update attachment progress label
-        if hasattr(self, 'attachment_progress_label'):
-            self.attachment_progress_label.setStyleSheet(f"""
-                QLabel {{
-                    font-size: 11px;
-                    color: {theme['primary']};
-                    font-weight: bold;
-                    text-align: center;
-                }}
-            """)
-        
-        # Update attachment errors label
-        if hasattr(self, 'attachment_errors_label'):
-            self.attachment_errors_label.setStyleSheet(f"""
-                QLabel {{
-                    font-size: 10px;
-                    color: {theme['error']};
-                    text-align: center;
                 }}
             """)
         
@@ -526,27 +466,25 @@ class ProgressScreen(ThemedWidget):
         """Create the left panel with progress display"""
         panel = QGroupBox("Email Sending Progress")
         panel.setStyleSheet(CARD_STYLE)
-        
+
         layout = QVBoxLayout()
         layout.setContentsMargins(15, 15, 15, 15)
         layout.setSpacing(15)
-        
+
         # Progress section
         progress_section = self.create_progress_section()
         layout.addWidget(progress_section)
-        
+
         # Current status section
         status_section = self.create_status_section()
         layout.addWidget(status_section)
-        
+
         # Counters section
         counters_section = self.create_counters_section()
         layout.addWidget(counters_section)
-        
-        # Attachment processing progress (when applicable)
-        attachment_progress_section = self.create_attachment_progress_section()
-        layout.addWidget(attachment_progress_section)
-        
+
+        # Remove attachment progress section - keeping only 1 progress bar
+
         panel.setLayout(layout)
         return panel
         
@@ -561,14 +499,19 @@ class ProgressScreen(ThemedWidget):
         # Progress label
         self.progress_label = QLabel("Preparing to send emails")
         theme = self.get_current_theme()
+        # Make the main progress label larger and ensure strong contrast.
+        # Use a transparent background by default; a subtle translucent
+        # backing will be applied in _apply_theme_to_hardcoded_elements if
+        # the computed contrast is low for the current theme.
         self.progress_label.setStyleSheet(f"""
             QLabel {{
-                font-size: 14px;
-                font-weight: bold;
+                font-size: 16px;
+                font-weight: 700;
                 color: {theme['text_primary']};
-                text-align: center;
                 background-color: transparent;
-                border: none;
+                margin-bottom: 8px;
+                padding: 4px 8px;
+                border-radius: 4px;
             }}
         """)
         self.progress_label.setAlignment(Qt.AlignCenter)
@@ -579,24 +522,35 @@ class ProgressScreen(ThemedWidget):
         self.progress_bar.setMinimum(0)
         self.progress_bar.setMaximum(100)
         self.progress_bar.setValue(0)
+        # Hide the built-in QProgressBar text to avoid overlapping/duplicate
+        # percentage text. We show percentage explicitly in `self.percentage_label`.
+        try:
+            self.progress_bar.setTextVisible(False)
+        except Exception:
+            # Some PyQt versions may not have setTextVisible; ignore if absent
+            pass
         
-        # Get theme colors for dynamic styling
+        # Get theme colors for dynamic styling - single clean progress bar design
+        # Previous styling created visual appearance of two progress bars due to:
+        # 1. Thick border creating outer "bar" appearance  
+        # 2. Background color visible around filled chunk creating inner "bar" appearance
+        # This styling creates a single, unified progress bar appearance
         theme_colors = self.theme_manager.get_theme()
         self.progress_bar.setStyleSheet(f"""
             QProgressBar {{
-                border: 2px solid {theme_colors['border']};
-                border-radius: 8px;
+                border: 1px solid {theme_colors['border']};
+                border-radius: 6px;
                 background-color: {theme_colors['surface']};
                 text-align: center;
                 font-weight: bold;
                 font-size: {FONT_SIZE_SMALL};
                 color: {theme_colors['text_primary']};
-                height: 28px;
+                height: 24px;
             }}
             QProgressBar::chunk {{
                 background-color: {theme_colors['primary']};
-                border-radius: 6px;
-                margin: 1px;
+                border-radius: 4px;
+                margin: 0px;
             }}
         """)
         layout.addWidget(self.progress_bar)
@@ -622,19 +576,19 @@ class ProgressScreen(ThemedWidget):
         """Create the current status section"""
         # Theme styling will be applied in apply_theme_customizations()
         
+        # Use a minimal, non-card status area so it doesn't look like a second
+        # progress bar. Keep it visually light and text-focused.
         section = QFrame()
-        theme = self.get_current_theme()
-        section.setStyleSheet(f"""
-            QFrame {{
-                background-color: {theme['surface_container']};
-                border: 1px solid {theme['border']};
-                border-radius: 6px;
-                padding: 12px;
-            }}
+        section.setStyleSheet("""
+            QFrame {
+                background-color: transparent;
+                border: none;
+                padding: 6px 0px;
+            }
         """)
-        
+
         layout = QVBoxLayout()
-        layout.setSpacing(8)
+        layout.setSpacing(4)
         
         # Current email
         self.current_email_label = QLabel("Ready to start sending")
@@ -1227,6 +1181,24 @@ class ProgressScreen(ThemedWidget):
         
         # Start the email sending process
         self.log_info("Starting email sending timer...")
+
+        # Decide whether to run the real sending loop or the demo simulation.
+        # PreviewScreen/other callers set 'campaign_ready' and 'preview_completed'
+        # when this is a real campaign coming from the preview flow.
+        use_real_send = bool(campaign_data.get('campaign_ready') or campaign_data.get('preview_completed'))
+
+        # Reconnect timer callback safely
+        try:
+            self.simulation_timer.timeout.disconnect()
+        except Exception:
+            # No prior connection
+            pass
+
+        if use_real_send:
+            self.simulation_timer.timeout.connect(self.send_next_email)
+        else:
+            self.simulation_timer.timeout.connect(self.simulate_next_email)
+
         if not self.simulation_active:
             self.simulation_active = True
             self.simulation_timer.start(1000)  # Start sending emails with 1 second interval
@@ -1268,13 +1240,26 @@ class ProgressScreen(ThemedWidget):
             percentage = int((self.current_progress / self.total_emails) * 100)
             self.progress_label.setText(f"Sending {self.current_progress} of {self.total_emails} emails")
             self.percentage_label.setText(f"{percentage}%")
-        
+
+            # Ensure progress label has good contrast in dark mode
+            theme = self.get_current_theme()
+            self.progress_label.setStyleSheet(f"""
+                QLabel {{
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: {theme['text_primary']};
+                    text-align: center;
+                    background-color: transparent;
+                    border: none;
+                }}
+            """)
+
         # Current status
         self.update_status_display()
-        
+
         # Update counters
         self.update_counters()
-        
+
         # Update log statistics
         self.update_log_statistics()
         
@@ -1324,11 +1309,6 @@ class ProgressScreen(ThemedWidget):
             total_size = sum(att.get('file_size', 0) for att in self.attachments)
             size_str = self.format_file_size(total_size)
             self.attachment_info_label.setText(f"📎 {len(self.attachments)} attachments ({size_str})")
-            
-            # Show attachment progress section if needed
-            if len(self.attachments) > 3:  # Show for larger attachment counts
-                self.attachment_progress_section.setVisible(True)
-                self.attachment_progress_label.setText(f"Processing {len(self.attachments)} attachments per email...")
         else:
             self.attachment_info_label.setText("No attachments")
             
@@ -1592,10 +1572,10 @@ class ProgressScreen(ThemedWidget):
             
             # Test connection first
             print("🔐 Testing SMTP connection...")
-            connection_test = self.email_service.test_connection()
-            if not connection_test:
-                print("❌ SMTP connection failed!")
-                self.log_failure(email, "SMTP connection failed", False)
+            connection_success, connection_error = self.email_service.test_connection()
+            if not connection_success:
+                print(f"❌ SMTP connection failed: {connection_error}")
+                self.log_failure(email, f"SMTP connection failed: {connection_error}", False)
                 return
             print("✅ SMTP connection successful")
             
@@ -1813,9 +1793,6 @@ class ProgressScreen(ThemedWidget):
                 border: 1px solid {theme['primary']};
             }}
         """)
-        
-        # Hide attachment progress section
-        self.attachment_progress_section.setVisible(False)
         
         # Update all displays
         self.update_counters()
