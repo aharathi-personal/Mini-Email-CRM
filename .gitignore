@@ -245,3 +245,5 @@ testing-env/
 temp/
 logs/
 *.log
+# Local backup artifacts
+.cleanup-backup/

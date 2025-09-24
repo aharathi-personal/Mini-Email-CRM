@@ -1,41 +1,63 @@
 # Configuration settings for Mini Email CRM
 import os
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+
+def _get_int_env(key: str, default: int) -> int:
+    """Get an integer environment variable with safe fallback.
+
+    Returns the integer value of the env var, or the provided default if parsing fails.
+    """
+    val = os.getenv(key, str(default))
+    try:
+        return int(val)
+    except (ValueError, TypeError):
+        return int(default)
+
+
+def _get_bool_env(key: str, default: bool) -> bool:
+    """Get a boolean environment variable with safe fallback."""
+    val = os.getenv(key, str(default))
+    try:
+        return str(val).lower() in ('1', 'true', 'yes', 'on')
+    except Exception:
+        return bool(default)
 
 # SMTP Configuration
 SMTP_SETTINGS = {
     'server': os.getenv('SMTP_SERVER', 'smtp.gmail.com'),
-    'port': int(os.getenv('SMTP_PORT', '587')),
+    'port': _get_int_env('SMTP_PORT', 587),
     'use_tls': True,
-    'username': os.getenv('SMTP_USERNAME', ''),
-    'password': os.getenv('SMTP_PASSWORD', ''),
+    # NOTE: Do NOT load username/password from environment here.
+    # Credentials should be provided at runtime via the Login UI
+    # and injected into the application (e.g. MainWindow.on_login_success).
+    # Keep these blank by default to avoid using any .env-supplied secrets
+    # as the authoritative credentials for a session.
+    'username': '',
+    'password': '',
 }
 
 # UI Constants
 UI_SETTINGS = {
     'window_title': 'Mini Email CRM',
-    'window_width': int(os.getenv('WINDOW_WIDTH', '1000')),
-    'window_height': int(os.getenv('WINDOW_HEIGHT', '700')),
-    'min_width': int(os.getenv('MIN_WINDOW_WIDTH', '800')),
-    'min_height': int(os.getenv('MIN_WINDOW_HEIGHT', '600')),
+    'window_width': _get_int_env('WINDOW_WIDTH', 1000),
+    'window_height': _get_int_env('WINDOW_HEIGHT', 700),
+    'min_width': _get_int_env('MIN_WINDOW_WIDTH', 800),
+    'min_height': _get_int_env('MIN_WINDOW_HEIGHT', 600),
 }
 
 # File Settings
 FILE_SETTINGS = {
     'allowed_extensions': ['.csv', '.xlsx', '.xls'],
-    'max_file_size_mb': int(os.getenv('MAX_FILE_SIZE_MB', '10')),
+    'max_file_size_mb': _get_int_env('MAX_FILE_SIZE_MB', 10),
     'encoding': os.getenv('FILE_ENCODING', 'utf-8'),
 }
 
 # Email Settings
 EMAIL_SETTINGS = {
-    'batch_size': int(os.getenv('EMAIL_BATCH_SIZE', '50')),
-    'delay_between_batches': int(os.getenv('EMAIL_DELAY_BETWEEN_BATCHES', '2')),
-    'max_retries': int(os.getenv('EMAIL_MAX_RETRIES', '3')),
-    'timeout': int(os.getenv('EMAIL_TIMEOUT', '30')),
+    'batch_size': _get_int_env('EMAIL_BATCH_SIZE', 50),
+    'delay_between_batches': _get_int_env('EMAIL_DELAY_BETWEEN_BATCHES', 2),
+    'max_retries': _get_int_env('EMAIL_MAX_RETRIES', 3),
+    'timeout': _get_int_env('EMAIL_TIMEOUT', 30),
 }
 
 # Logging Settings
@@ -48,4 +70,4 @@ LOGGING_SETTINGS = {
 }
 
 # Application Settings
-DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+DEBUG = _get_bool_env('DEBUG', False)

@@ -490,6 +490,13 @@ class MainWindow(QMainWindow):
             print(f"Warning: Could not update SMTP settings: {e}")
         
         # Proceed to upload screen
+        # Refresh compose screen so it picks up the new SMTP username/password
+        try:
+            if hasattr(self, 'compose_screen') and hasattr(self.compose_screen, 'refresh_smtp_settings'):
+                self.compose_screen.refresh_smtp_settings()
+        except Exception as e:
+            print(f"Warning: Failed to refresh compose screen SMTP settings: {e}")
+
         self.show_upload_screen()
         
     def on_upload_next(self):
