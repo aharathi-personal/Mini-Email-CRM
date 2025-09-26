@@ -205,23 +205,23 @@ class CSVHandler:
         # Map each standard field to actual column
         for standard_field, variations in self.column_mappings.items():
             found_column = None
-            
+
             for variation in variations:
                 if variation.lower() in columns_lower:
                     found_column = columns_lower[variation.lower()]
                     break
-            
+
             if found_column:
                 mapping[standard_field] = found_column
-        
-        # Validate required columns
-        required_fields = ['email', 'firstname', 'lastname']
+
+        # Validate required columns (lastname optional)
+        required_fields = ['email', 'firstname']
         missing_fields = []
-        
+
         for field in required_fields:
             if field not in mapping:
                 missing_fields.append(field)
-        
+
         if missing_fields:
             available_columns = list(df.columns)
             raise CSVValidationError(
@@ -232,7 +232,7 @@ class CSVHandler:
                     'column_mappings': self.column_mappings
                 }
             )
-        
+
         self.logger.info(f"Column mapping successful: {mapping}")
         return mapping
     
@@ -253,7 +253,7 @@ class CSVHandler:
         
         email_col = column_mapping['email']
         firstname_col = column_mapping['firstname']
-        lastname_col = column_mapping['lastname']
+        lastname_col = column_mapping.get('lastname')
         
         # Statistics tracking
         empty_emails = 0
@@ -282,10 +282,11 @@ class CSVHandler:
                 row_errors.append("Missing first name")
             
             # Check lastname
-            lastname = str(row[lastname_col]).strip() if pd.notna(row[lastname_col]) else ''
-            if not lastname:
-                empty_lastnames += 1
-                row_errors.append("Missing last name")
+            lastname = ''
+            if lastname_col:
+                lastname = str(row[lastname_col]).strip() if pd.notna(row[lastname_col]) else ''
+                if not lastname:
+                    empty_lastnames += 1
             
             if row_errors:
                 result['invalid_rows'].append({
@@ -314,8 +315,8 @@ class CSVHandler:
             result['warnings'].append(f"{invalid_emails} rows have invalid email formats")
         if empty_firstnames > 0:
             result['warnings'].append(f"{empty_firstnames} rows have missing first names")
-        if empty_lastnames > 0:
-            result['warnings'].append(f"{empty_lastnames} rows have missing last names")
+        if lastname_col and empty_lastnames > 0:
+            result['warnings'].append(f"{empty_lastnames} rows have missing last names (optional field)")
         
         return result
     

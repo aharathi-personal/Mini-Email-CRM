@@ -25,7 +25,7 @@ Task 15 has been successfully completed. The Upload Screen (Screen 1) is fully i
 
 4. **Show file requirements text** ✅
    - Clear requirements displayed in upload zone
-   - Specifies required columns: email, firstname, lastname
+   - Specifies required columns: email, firstname (lastname optional)
    - User-friendly formatting and presentation
 
 5. **Add Next/Exit button functionality** ✅
@@ -117,7 +117,7 @@ docs/TASK15_UPLOAD_SCREEN_SUMMARY.md # This document
 ## 🔄 **Integration Points**
 
 ### **Input:**
-- CSV files with email, firstname, lastname columns
+- CSV files with email and firstname columns (lastname optional)
 - User interactions (clicks, drag-and-drop)
 
 ### **Output:**
@@ -135,7 +135,9 @@ docs/TASK15_UPLOAD_SCREEN_SUMMARY.md # This document
 ### **Required Columns (case-insensitive):**
 - `email` - Contact email addresses
 - `firstname` - Contact first names  
-- `lastname` - Contact last names
+
+### **Optional Columns:**
+- `lastname` - Contact last names (recommended for personalization)
 
 ### **File Requirements:**
 - UTF-8 encoding support

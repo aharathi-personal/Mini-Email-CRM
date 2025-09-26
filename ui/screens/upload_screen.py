@@ -88,7 +88,7 @@ class UploadScreen(ThemedWidget):
         header_layout.addWidget(self.title_label)
         
         # Subtitle
-        self.subtitle_label = QLabel("Upload a CSV file containing your contact list with email, firstname, and lastname columns")
+        self.subtitle_label = QLabel("Upload a CSV file containing your contact list with email and firstname columns (lastname optional)")
         self.subtitle_label.setAlignment(Qt.AlignCenter)
         # Theme styling will be applied by apply_theme_customizations()
         self.subtitle_label.setWordWrap(True)

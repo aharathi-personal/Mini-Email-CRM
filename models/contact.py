@@ -16,13 +16,13 @@ class Contact:
     Core attributes for email personalization:
     - email: Required, validated email address
     - firstname: Required for personalization
-    - lastname: Required for personalization  
+    - lastname: Optional, used when available  
     - Additional optional fields for extended functionality
     """
     
     email: str
     firstname: str
-    lastname: str
+    lastname: Optional[str] = None
     phone: Optional[str] = None
     company: Optional[str] = None
     title: Optional[str] = None
@@ -30,13 +30,15 @@ class Contact:
     
     def __post_init__(self):
         """Validate required fields on initialization"""
-        if not self.email or not self.email.strip():
+        self.email = self.email.strip() if self.email else ''
+        self.firstname = self.firstname.strip() if self.firstname else ''
+        self.lastname = (self.lastname or '').strip()
+
+        if not self.email:
             raise ValueError("Email is required")
-        if not self.firstname or not self.firstname.strip():
+        if not self.firstname:
             raise ValueError("First name is required")
-        if not self.lastname or not self.lastname.strip():
-            raise ValueError("Last name is required")
-        
+
         # Validate email format immediately
         if not self.is_valid_email():
             raise ValueError(f"Invalid email format: {self.email}")
@@ -108,11 +110,8 @@ class Contact:
         elif not self.is_valid_email():
             errors.append(f"Invalid email format: {self.email}")
         
-        if not self.firstname or not self.firstname.strip():
+        if not self.firstname:
             errors.append("First name is required")
-            
-        if not self.lastname or not self.lastname.strip():
-            errors.append("Last name is required")
         
         # Optional field validation
         if self.phone and not self.is_valid_phone():
@@ -122,7 +121,9 @@ class Contact:
     
     def get_full_name(self) -> str:
         """Get full name in 'FirstName LastName' format"""
-        return f"{self.firstname.strip()} {self.lastname.strip()}"
+        if self.lastname:
+            return f"{self.firstname} {self.lastname}"
+        return self.firstname
     
     def get_display_name(self) -> str:
         """

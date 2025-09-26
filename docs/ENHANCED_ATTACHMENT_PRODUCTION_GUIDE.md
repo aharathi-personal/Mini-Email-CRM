@@ -29,8 +29,8 @@ The Enhanced Email CRM system now includes comprehensive attachment functionalit
 ### 1. CSV Contact Import
 ```
 Requirements:
-- Required columns: email, firstname, lastname
-- Optional columns: company, phone, title
+- Required columns: email, firstname
+- Optional columns: lastname, company, phone, title
 - File format: CSV with UTF-8 encoding
 - Size limit: 10MB maximum
 - Validation: Email format, required fields, duplicates
@@ -173,7 +173,7 @@ python main.py
 
 ### CSV File Preparation
 - Use UTF-8 encoding for international characters
-- Include required columns: email, firstname, lastname
+- Include required columns: email, firstname (lastname optional)
 - Validate email addresses before import
 - Remove duplicate entries
 - Keep file size under 10MB
@@ -206,7 +206,7 @@ python main.py
 #### CSV Import Problems
 ```
 Issue: "Required columns not found"
-Solution: Ensure CSV has email, firstname, lastname columns
+Solution: Ensure CSV has email and firstname columns (lastname optional)
 
 Issue: "Invalid email format"
 Solution: Check email addresses for proper format (user@domain.com)

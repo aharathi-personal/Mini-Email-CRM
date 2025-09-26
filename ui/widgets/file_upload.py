@@ -146,7 +146,7 @@ class FileUploadWidget(QWidget, ThemeAwareMixin):
         layout.addWidget(instruction_label)
         
         # Supported formats
-        format_label = QLabel("Supported: .csv files with email, firstname, lastname columns")
+        format_label = QLabel("Supported: .csv files with email and firstname columns (lastname optional)")
         format_label.setAlignment(Qt.AlignCenter)
         format_label.setStyleSheet(f"font-size: {FONT_SIZE_SMALL}; color: {theme['text_tertiary']}; border: none; background: transparent;")
         layout.addWidget(format_label)
@@ -245,7 +245,7 @@ class FileUploadWidget(QWidget, ThemeAwareMixin):
                 
                 # Check for required columns (case-insensitive)
                 headers_lower = [h.lower().strip() for h in headers]
-                required_columns = ['email', 'firstname', 'lastname']
+                required_columns = ['email', 'firstname']
                 missing_columns = []
                 
                 for col in required_columns:
@@ -284,7 +284,7 @@ class FileUploadWidget(QWidget, ThemeAwareMixin):
                         else:
                             # Some contacts were skipped
                             skipped = total_rows - valid_contacts
-                            self.show_validation_success(f"Valid CSV file with {valid_contacts} valid contacts found ({skipped} skipped due to missing emails).")
+                            self.show_validation_success(f"Valid CSV file with {valid_contacts} valid contacts found ({skipped} skipped due to missing emails or first names).")
                     else:
                         # Fallback to basic row count if CSV processing fails
                         file.seek(0)  # Reset file pointer

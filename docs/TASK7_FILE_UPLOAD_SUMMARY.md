@@ -58,7 +58,7 @@ Successfully implemented a comprehensive file upload widget with drag-and-drop f
 - **Comprehensive Validation**:
   - File existence and format checking
   - CSV structure validation (headers)
-  - Required columns verification (email, firstname, lastname)
+  - Required columns verification (email, firstname; lastname optional)
   - Data row count validation
   - Encoding error handling
 

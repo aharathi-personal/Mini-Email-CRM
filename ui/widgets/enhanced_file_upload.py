@@ -275,7 +275,7 @@ class EnhancedFileUploadWidget(QWidget):
         content_layout.addWidget(sub_instruction)
         
         # Requirements text
-        requirements = QLabel("Supports: CSV files with email, firstname, lastname columns")
+        requirements = QLabel("Supports: CSV files with email and firstname columns (lastname optional)")
         requirements.setAlignment(Qt.AlignCenter)
         requirements.setStyleSheet(f"""
             QLabel {{
@@ -409,7 +409,7 @@ class EnhancedFileUploadWidget(QWidget):
         
         self.drop_zone.setToolTip(
             "Drag and drop a CSV file here for quick upload.\n"
-            "Required columns: email, firstname, lastname\n"
+            "Required columns: email, firstname (lastname optional)\n"
             "Optional columns: company, phone, title"
         )
     
@@ -603,7 +603,7 @@ class EnhancedFileUploadWidget(QWidget):
         error_text = " ".join(errors).lower()
         
         if "required columns not found" in error_text:
-            suggestions.append("• Ensure your CSV has columns named 'email', 'firstname', and 'lastname'")
+            suggestions.append("• Ensure your CSV has columns named 'email' and 'firstname' (lastname optional)")
             suggestions.append("• Check that the first row contains column headers")
         
         if "file too large" in error_text:
