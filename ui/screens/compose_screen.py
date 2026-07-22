@@ -563,7 +563,7 @@ class ComposeScreen(ThemedWidget):
         
         # Create the EmailEditor widget
         self.email_editor = EmailEditor(max_characters=5000)
-        layout.addWidget(self.email_editor)
+        layout.addWidget(self.email_editor, 1)
         
         # Attachment validation feedback area
         self.validation_feedback = self.create_validation_feedback_area()

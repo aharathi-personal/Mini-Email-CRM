@@ -129,12 +129,12 @@ class EmailEditor(QWidget):
         
         # Create text editor
         self.text_editor = self.create_text_editor()
-        main_layout.addWidget(self.text_editor)
-        
+        main_layout.addWidget(self.text_editor, 1)
+
         # Character count display
         self.char_count_label = self.create_character_counter()
         main_layout.addWidget(self.char_count_label)
-        
+
         # Create attachment section
         self.attachment_section = self.create_attachment_section()
         main_layout.addWidget(self.attachment_section)
@@ -234,7 +234,7 @@ class EmailEditor(QWidget):
         """Create the main text editing area"""
         editor = QTextEdit()
         editor.setMinimumHeight(200)
-        editor.setMaximumHeight(350)
+        editor.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         editor.setStyleSheet(self.get_theme_aware_style('input'))
         
         # Set placeholder text (as seen in Screen 2)
