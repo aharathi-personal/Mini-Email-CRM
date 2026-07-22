@@ -8,7 +8,6 @@ from PyInstaller.utils.hooks import collect_submodules
 from PyInstaller.utils.hooks import collect_data_files
 from PyInstaller.utils.hooks import copy_metadata
 from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
-from PyInstaller.utils.hooks import Tree
 
 block_cipher = None
 
@@ -17,9 +16,9 @@ entry_script = 'main.py'
 
 # Extra data trees: include resources, ui templates, config files
 datas = [
-    Tree('resources', prefix='resources'),
-    Tree('ui', prefix='ui'),
-    Tree('config', prefix='config'),
+    ('resources', 'resources'),
+    ('ui', 'ui'),
+    ('config', 'config'),
 ]
 
 # Hidden imports can be collected automatically for some libs (PyQt5 sometimes needs hints)
