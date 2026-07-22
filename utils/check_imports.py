@@ -9,6 +9,14 @@ import sys
 import ast
 import importlib.util
 
+# Windows consoles default to cp1252, which can't encode the emoji this
+# script prints; reconfigure to UTF-8 so it runs unmodified.
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 def check_file_imports(file_path):
     """Check a single Python file for import issues"""
     try:

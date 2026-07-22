@@ -5,6 +5,15 @@ Manual testing without pytest to keep it simple
 
 import sys
 import os
+
+# Windows consoles default to cp1252, which can't encode the emoji/check
+# marks this script prints; reconfigure to UTF-8 so it runs unmodified.
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.email_service import EmailService, EmailStatus, validate_email_settings, send_test_email
