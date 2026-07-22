@@ -8,6 +8,40 @@ exception handling, and application properties.
 
 import sys
 import os
+
+
+def _make_console_streams_safe():
+    """Guard print() against two Windows-specific failure modes:
+
+    1. The default Windows console codepage (cp1252) can't encode many
+       Unicode characters (e.g. emoji), so print() raises UnicodeEncodeError.
+    2. PyInstaller windowed/--noconsole builds (see pyinstaller.spec,
+       console=False) have no console at all, so sys.stdout/stderr are None
+       and print() raises AttributeError.
+
+    Must run before any other project modules are imported, since those
+    modules call print() with non-ASCII text at runtime.
+    """
+    class _NullStream:
+        def write(self, *args, **kwargs):
+            pass
+
+        def flush(self):
+            pass
+
+    for name in ("stdout", "stderr"):
+        stream = getattr(sys, name)
+        if stream is None:
+            setattr(sys, name, _NullStream())
+        elif hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                pass
+
+
+_make_console_streams_safe()
+
 import traceback
 import signal
 from PyQt5.QtWidgets import QApplication, QMessageBox, QSplashScreen

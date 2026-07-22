@@ -460,12 +460,28 @@ class CampaignManager:
                 
                 # Update progress
                 self._update_progress()
-                
+
                 # Add delay between emails (if not paused/stopped)
                 if not self._pause_event.is_set() and not self._stop_event.is_set():
                     delay = self.current_campaign.send_delay
                     time.sleep(delay)
-            
+
+                # Periodically recycle the SMTP connection so long campaigns
+                # don't get cut off by providers (e.g. Gmail) that drop or
+                # throttle long-lived sessions after too many messages.
+                batch_size = self.current_campaign.batch_size
+                is_last_contact = (i + 1) == len(contacts)
+                if (batch_size > 0 and (i + 1) % batch_size == 0 and not is_last_contact
+                        and not self._stop_event.is_set()):
+                    self.logger.info(f"Processed batch of {batch_size}, refreshing SMTP connection")
+                    self.email_service.close_connection()
+
+                    batch_delay = EMAIL_SETTINGS.get('delay_between_batches', 2)
+                    while batch_delay > 0 and not self._stop_event.is_set():
+                        wait = min(0.5, batch_delay)
+                        time.sleep(wait)
+                        batch_delay -= wait
+
             # Mark campaign as completed
             if not self._stop_event.is_set():
                 self.current_campaign.complete_sending()
